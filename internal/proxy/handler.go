@@ -87,7 +87,8 @@ func (p *Server) handler() http.Handler {
 		// SPA routes (admin UI and assets)
 		if path == "/" || path == "/login" || path == "/admin" || path == "/index.html" ||
 			strings.HasPrefix(path, "/admin/") || strings.HasPrefix(path, "/assets/") ||
-			path == "/vite.svg" {
+			path == "/vite.svg" || path == "/favicon.ico" ||
+			strings.HasPrefix(path, "/qcc-icon-") {
 			spa(w, r)
 			return
 		}
