@@ -2,9 +2,11 @@
 - 必须保证本文件简洁、准确，并且保证文件实时更新
 
 ## 最后更新
-- **更新日期**: 2025-11-22
+- **更新日期**: 2025-11-23
 - **更新人**: Claude Code
-- **版本**: v3.1.0
+- **当前版本**: v1.0.0
+- **GitHub**: https://github.com/yxhpy/qcc_plus
+- **Docker Hub**: https://hub.docker.com/r/yxhpy520/qcc_plus
 
 ## 项目概述
 - **项目名称**: qcc_plus
@@ -103,6 +105,7 @@ docker compose up -d
         <section name="基本执行流程" tag="steps">标准任务执行流程</section>
         <section name="编码规范" tag="coding_standards">Go 语言编码规则</section>
         <section name="版本控制" tag="version_control">Git 工作流和提交规范</section>
+        <section name="版本发布规范" tag="release_process">**重要**：GitHub Release 和 Docker Hub 发布流程</section>
         <section name="质量保证" tag="quality_assurance">代码审查和测试要求</section>
     </章节索引>
 </navigation>
@@ -282,3 +285,99 @@ docker compose up -d
         <solution>检查防火墙和端口配置</solution>
     </issue>
 </debugging>
+
+## 版本发布规范
+<release_process description="GitHub Release 和 Docker Hub 发布流程">
+    <version_scheme description="语义化版本规范">
+        <rule>使用语义化版本号：vX.Y.Z</rule>
+        <rule>X (主版本号)：不兼容的 API 变更</rule>
+        <rule>Y (次版本号)：向后兼容的功能新增</rule>
+        <rule>Z (修订号)：向后兼容的问题修正</rule>
+        <example>v1.0.0 - 首个正式版本</example>
+        <example>v1.1.0 - 新增功能（向后兼容）</example>
+        <example>v1.1.1 - Bug 修复</example>
+        <example>v2.0.0 - 重大更新（可能不兼容）</example>
+    </version_scheme>
+
+    <release_workflow description="完整发布流程">
+        <step_1 name="准备发布">
+            <action>确保所有更改已提交到 main 分支</action>
+            <action>更新 CLAUDE.md 中的版本号和更新日期</action>
+            <action>确认 README.md 和相关文档已更新</action>
+        </step_1>
+
+        <step_2 name="创建 Git 标签">
+            <command>git tag vX.Y.Z</command>
+            <command>git push origin vX.Y.Z</command>
+            <note>标签名称必须以 v 开头，如 v1.0.0</note>
+        </step_2>
+
+        <step_3 name="创建 GitHub Release">
+            <command>gh release create vX.Y.Z --title "vX.Y.Z - 版本描述" --notes "发布说明"</command>
+            <content_template>
+                # qcc_plus vX.Y.Z
+
+                ## 概述
+                [简要描述本次发布的主要内容]
+
+                ## 核心特性
+                - [功能列表]
+
+                ## 更新内容
+                - [变更列表]
+
+                ## 安装方式
+                Docker: docker pull yxhpy520/qcc_plus:vX.Y.Z
+                源码: git clone -b vX.Y.Z https://github.com/yxhpy/qcc_plus.git
+            </content_template>
+        </step_3>
+
+        <step_4 name="发布到 Docker Hub">
+            <prerequisite>确保已登录 Docker Hub: docker login</prerequisite>
+            <prerequisite>确保 Docker Hub 仓库已创建: yxhpy520/qcc_plus</prerequisite>
+            <command>./scripts/publish-docker.sh yxhpy520 vX.Y.Z</command>
+            <note>脚本会自动构建镜像并推送 vX.Y.Z 和 latest 标签</note>
+            <manual_steps>
+                <step>docker build -t yxhpy520/qcc_plus:vX.Y.Z .</step>
+                <step>docker tag yxhpy520/qcc_plus:vX.Y.Z yxhpy520/qcc_plus:latest</step>
+                <step>docker push yxhpy520/qcc_plus:vX.Y.Z</step>
+                <step>docker push yxhpy520/qcc_plus:latest</step>
+            </manual_steps>
+        </step_4>
+
+        <step_5 name="验证发布">
+            <check>GitHub Release: gh release view vX.Y.Z</check>
+            <check>Docker 镜像: docker pull yxhpy520/qcc_plus:vX.Y.Z</check>
+            <check>功能测试: 拉取镜像并运行基本功能测试</check>
+        </step_5>
+
+        <step_6 name="更新记忆文件">
+            <action>更新 CLAUDE.md 中的"当前版本"字段</action>
+            <action>记录此次发布的关键信息</action>
+            <action>提交并推送更新</action>
+        </step_6>
+    </release_workflow>
+
+    <important_notes description="发布注意事项">
+        <note>首个正式版本从 v1.0.0 开始，不要使用过大的版本号</note>
+        <note>Docker Hub 用户名是 yxhpy520（不是 yxhpy）</note>
+        <note>latest 标签始终指向最新的稳定版本</note>
+        <note>发布前必须确保代码已通过所有测试</note>
+        <note>GitHub Release 应包含详细的更新说明和安装指南</note>
+        <note>每次发布后立即更新 CLAUDE.md 记忆文件</note>
+    </important_notes>
+
+    <version_history description="版本发布历史">
+        <release version="v1.0.0" date="2025-11-23">
+            <description>首个正式版本</description>
+            <highlights>
+                - 多租户架构支持
+                - React Web 管理界面
+                - Cloudflare Tunnel 集成
+                - Docker 化部署支持
+            </highlights>
+            <github>https://github.com/yxhpy/qcc_plus/releases/tag/v1.0.0</github>
+            <docker>yxhpy520/qcc_plus:v1.0.0</docker>
+        </release>
+    </version_history>
+</release_process>
