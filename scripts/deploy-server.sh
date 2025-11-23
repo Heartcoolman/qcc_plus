@@ -104,7 +104,7 @@ wait_for_service "$HEALTH_URL"
 
 log "cleaning old containers/images"
 docker container prune -f --filter "label=com.docker.compose.project=${PROJECT_NAME}" >/dev/null 2>&1 || true
-OLD_IMAGES="$(docker images "$IMAGE_NAME" --format '{{.ID}} {{.Tag}}' | awk '$2==\"<none>\" {print $1}')"
+OLD_IMAGES="$(docker images "$IMAGE_NAME" --format '{{.ID}} {{.Tag}}' | grep '<none>' | awk '{print $1}' || true)"
 if [[ -n "${OLD_IMAGES}" ]]; then
   echo "$OLD_IMAGES" | xargs -r docker rmi -f >/dev/null 2>&1 || true
 fi
