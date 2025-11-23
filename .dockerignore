@@ -1,0 +1,80 @@
+# Git
+.git
+.gitignore
+
+# CI/CD
+.github
+
+# Development files
+.env
+.env.local
+*.tmp
+.codex_*.txt
+.codex_*.md
+
+# IDE and editor files
+.DS_Store
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+cccli_bin
+/cmd/cccli/cccli
+*.test
+*.out
+
+# Cache directories
+.cache
+.gocache
+.gomodcache
+
+# Frontend development files
+frontend/node_modules
+frontend/dist
+frontend/dist-ssr
+frontend/*.local
+frontend/test.txt
+frontend/src
+frontend/package.json
+frontend/package-lock.json
+frontend/tsconfig.json
+frontend/vite.config.ts
+frontend/index.html
+frontend/.gitignore
+
+# Database files (not needed in container)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Docker files (avoid recursion)
+.docker/data
+.docker/buildx
+docker-compose.yml
+
+# Documentation (optional, uncomment if you want to exclude)
+# README.md
+# CLAUDE.md
+# docs
+
+# Test and debug directories
+tests
+debugs
+verify
+tasks
