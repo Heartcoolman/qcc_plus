@@ -135,6 +135,7 @@ docker compose up -d
 - **[docs/cloudflare-tunnel.md](docs/cloudflare-tunnel.md)** - Cloudflare Tunnel 集成指南
 - **[docs/health_check_mechanism.md](docs/health_check_mechanism.md)** - 健康检查机制
 - **[docs/docker-hub-publish.md](docs/docker-hub-publish.md)** - Docker Hub 发布流程
+- **[docs/ci-cd-troubleshooting.md](docs/ci-cd-troubleshooting.md)** - CI/CD 部署故障排查指南
 
 ### 前端文档
 - **[docs/frontend-tech-stack.md](docs/frontend-tech-stack.md)** - 管理界面技术栈和开发流程
@@ -320,6 +321,12 @@ docker compose up -d
         <solution>检查 PROXY_MYSQL_DSN 格式</solution>
         <solution>确认 MySQL 服务运行状态</solution>
         <solution>检查防火墙和端口配置</solution>
+    </issue>
+    <issue name="CI/CD 健康检查超时">
+        <solution>详见 docs/ci-cd-troubleshooting.md</solution>
+        <solution>v1.0.1+ 已增强健康检查：10s 初始等待 + 6 次重试</solution>
+        <solution>检查服务器端口和防火墙配置</solution>
+        <solution>查看部署日志: docker logs qcc_test-proxy-1</solution>
     </issue>
 </debugging>
 

@@ -56,8 +56,39 @@ jobs:
           HOST: ${{ secrets.TEST_HOST }}
         run: |
           set -euo pipefail
-          status=$(curl -s -o /dev/null -w "%{http_code}" "http://${HOST}:${TEST_PORT}/")
-          echo "HTTP status: ${status}"
-          if [ "$status" -lt 200 ] || [ "$status" -ge 400 ]; then
-            exit 1
-          fi
+
+          # Wait for service to be accessible externally
+          echo "Waiting 10 seconds for service to stabilize..."
+          sleep 10
+
+          # Health check with retry logic
+          HEALTH_URL="http://${HOST}:${TEST_PORT}/"
+          MAX_ATTEMPTS=6
+          RETRY_DELAY=5
+
+          for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Health check attempt ${attempt}/${MAX_ATTEMPTS} on ${HEALTH_URL}"
+
+            # Use explicit timeouts: 10s connect, 20s total
+            status=$(curl --connect-timeout 10 --max-time 20 -s -o /dev/null -w "%{http_code}" "${HEALTH_URL}" || echo "000")
+
+            echo "HTTP status: ${status}"
+
+            if [ "$status" -ge 200 ] && [ "$status" -lt 400 ]; then
+              echo "Health check succeeded!"
+              exit 0
+            fi
+
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              echo "Health check failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
+
+          echo "Health check failed after ${MAX_ATTEMPTS} attempts"
+          echo "Possible causes:"
+          echo "- Service not running on port ${TEST_PORT}"
+          echo "- Firewall blocking port ${TEST_PORT}"
+          echo "- Deploy script failed to start application"
+          echo "Please check server logs: docker logs qcc_test-proxy-1"
+          exit 1
