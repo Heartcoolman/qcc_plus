@@ -20,7 +20,12 @@ services:
       retries: 5
 
   proxy:
-    build: .
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-dev}
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
     container_name: qcc_test_proxy
     environment:
       UPSTREAM_BASE_URL: https://api.anthropic.com

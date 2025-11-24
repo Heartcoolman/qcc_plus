@@ -100,6 +100,12 @@ log "installing frontend dependencies (npm ci)"
 log "building frontend bundle"
 bash scripts/build-frontend.sh
 
+# 设置版本信息环境变量用于 Docker 构建
+export VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo 'dev')"
+export GIT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
+export BUILD_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+log "building with VERSION=$VERSION GIT_COMMIT=$GIT_COMMIT BUILD_DATE=$BUILD_DATE"
+
 log "validating docker compose config ($COMPOSE_FILE)"
 $DOCKER_COMPOSE -p "$PROJECT_NAME" -f "$COMPOSE_FILE" config >/dev/null
 
