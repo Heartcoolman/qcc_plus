@@ -31,10 +31,11 @@ RUN apt-get update && apt-get install -y ca-certificates curl gnupg && \
 # 安装 Claude Code CLI
 RUN npm install -g @anthropic-ai/claude-code@latest && claude --version
 
-# 复制二进制文件
+# 复制二进制文件和资源
 COPY --from=build /app/ccproxy /usr/local/bin/ccproxy
 COPY --from=tools /cloudflared /usr/local/bin/cloudflared
 COPY scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY CHANGELOG.md /app/CHANGELOG.md
 RUN chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 8000

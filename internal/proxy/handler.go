@@ -275,7 +275,7 @@ func (p *Server) handleChangelog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	paths := []string{"CHANGELOG.md"}
+	paths := []string{"CHANGELOG.md", "/app/CHANGELOG.md"}
 	if exe, err := os.Executable(); err == nil {
 		paths = append(paths, filepath.Join(filepath.Dir(exe), "CHANGELOG.md"))
 	}
