@@ -65,6 +65,10 @@ rollback() {
 trap rollback ERR
 
 log "syncing branch $BRANCH"
+log "resetting local changes"
+git reset --hard HEAD
+log "cleaning untracked files"
+git clean -fd
 git fetch --prune origin "$BRANCH"
 git checkout "$BRANCH"
 git pull --rebase origin "$BRANCH"
