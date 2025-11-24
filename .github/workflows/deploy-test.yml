@@ -48,6 +48,14 @@ jobs:
             set -euo pipefail
             APP_DIR="${APP_DIR:-/opt/qcc_plus}"
             cd "$APP_DIR"
+
+            # Force reset and pull latest code first
+            git reset --hard HEAD
+            git clean -fd
+            git fetch --prune origin test
+            git checkout test
+            git pull --rebase origin test
+
             chmod +x scripts/deploy-server.sh
             ./scripts/deploy-server.sh test
 
