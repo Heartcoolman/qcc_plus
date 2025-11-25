@@ -272,6 +272,13 @@
   display: inline-block;
 }
 
+.time-cell {
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .notifications-grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
@@ -338,6 +345,12 @@
 .event-desc {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.65);
+}
+
+.event-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .pill {

@@ -5,6 +5,7 @@ import Toast from '../components/Toast'
 import useDialog from '../hooks/useDialog'
 import api from '../services/api'
 import type { EventType, NotificationChannel, NotificationSubscription } from '../types'
+import { formatBeijingTime } from '../utils/date'
 import './Notifications.css'
 
 const channelTypes = [
@@ -221,6 +222,8 @@ export default function Notifications() {
     return groups
   }, [eventTypes])
 
+  const subscriptionMap = useMemo(() => new Map(subscriptions.map((s) => [s.event_type, s])), [subscriptions])
+
   const handleToggleEvent = (eventType: string) => {
     setSelectedEvents((prev) => {
       const next = new Set(prev)
@@ -380,6 +383,8 @@ export default function Notifications() {
                 <th>名称</th>
                 <th>类型</th>
                 <th>状态</th>
+                <th style={{ minWidth: 170 }}>创建时间</th>
+                <th style={{ minWidth: 170 }}>更新时间</th>
                 <th style={{ minWidth: 220 }}>操作</th>
               </tr>
             </thead>
@@ -409,6 +414,12 @@ export default function Notifications() {
                           <span className="dot" />
                           {ch.enabled ? '启用' : '停用'}
                         </span>
+                      </td>
+                      <td>
+                        <div className="time-cell">{formatBeijingTime(ch.created_at)}</div>
+                      </td>
+                      <td>
+                        <div className="time-cell">{ch.updated_at ? formatBeijingTime(ch.updated_at) : '-'}</div>
                       </td>
                       <td>
                         <div className="table-actions">
@@ -492,19 +503,27 @@ export default function Notifications() {
                       <div className="empty-box small">暂未提供该分类事件</div>
                     ) : (
                       <div className="event-list">
-                        {list.map((evt) => (
-                          <label className="event-item" key={evt.type}>
-                            <input
-                              type="checkbox"
-                              checked={selectedEvents.has(evt.type)}
-                              onChange={() => handleToggleEvent(evt.type)}
-                            />
-                            <div>
-                              <div className="event-type">{evt.type}</div>
-                              <div className="event-desc">{evt.description}</div>
-                            </div>
-                          </label>
-                        ))}
+                        {list.map((evt) => {
+                          const sub = subscriptionMap.get(evt.type)
+                          return (
+                            <label className="event-item" key={evt.type}>
+                              <input
+                                type="checkbox"
+                                checked={selectedEvents.has(evt.type)}
+                                onChange={() => handleToggleEvent(evt.type)}
+                              />
+                              <div>
+                                <div className="event-type">{evt.type}</div>
+                                <div className="event-desc">{evt.description}</div>
+                                <div className="event-meta muted">
+                                  {sub
+                                    ? `创建：${formatBeijingTime(sub.created_at)}${sub.updated_at ? ` · 更新：${formatBeijingTime(sub.updated_at)}` : ''}`
+                                    : '尚未创建订阅'}
+                                </div>
+                              </div>
+                            </label>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
