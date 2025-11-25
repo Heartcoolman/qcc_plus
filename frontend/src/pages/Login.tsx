@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom'
 import Toast from '../components/Toast'
 import { useAuth } from '../hooks/useAuth'
 import { useVersion } from '../hooks/useVersion'
-import { formatBeijingTime } from '../utils/date'
 
 import './Login.css'
 
@@ -47,8 +46,9 @@ export default function Login() {
     : versionLoading
       ? 'v...'
       : 'v-'
+  const buildDateBeijing = version?.build_date_beijing || '--'
   const versionTitle = version
-    ? `commit: ${version.git_commit}\nbuild: ${formatBeijingTime(version.build_date)}\ngo: ${version.go_version}`
+    ? `commit: ${version.git_commit}\nbuild (BJ): ${buildDateBeijing}\nbuild (UTC): ${version.build_date || '--'}\ngo: ${version.go_version}`
     : versionError
       ? `版本获取失败：${versionError.message}`
       : '正在加载版本信息...'

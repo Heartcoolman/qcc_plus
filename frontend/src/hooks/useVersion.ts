@@ -5,6 +5,7 @@ export interface VersionInfo {
   version: string
   git_commit: string
   build_date: string
+  build_date_beijing: string
   go_version: string
 }
 
