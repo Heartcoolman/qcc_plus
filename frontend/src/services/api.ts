@@ -163,6 +163,14 @@ async function toggleNode(id: string, disabled: boolean): Promise<void> {
   })
 }
 
+async function reorderNodes(orders: { id: string; sort_order: number }[], accountId?: string): Promise<void> {
+  await request(withAccount('/admin/api/nodes/reorder', accountId), {
+    method: 'PUT',
+    headers: defaultHeaders,
+    body: JSON.stringify({ orders }),
+  })
+}
+
 async function getConfig(accountId?: string): Promise<Config> {
   return request<Config>(withAccount('/admin/api/config', accountId))
 }
@@ -325,6 +333,7 @@ export default {
   deleteNode,
   activateNode,
   toggleNode,
+  reorderNodes,
   getConfig,
   updateConfig,
   getTunnel,

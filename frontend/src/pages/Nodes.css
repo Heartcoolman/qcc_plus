@@ -138,6 +138,46 @@ tr:last-child td {
   border-bottom: none;
 }
 
+.drag-handle-cell {
+  width: 54px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.drag-handle {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.drag-handle:hover {
+  background: rgba(100, 108, 255, 0.12);
+  color: #fff;
+  border-color: rgba(100, 108, 255, 0.45);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+tbody tr.dragging {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+tbody tr.dragging td {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
 /* URL Cell */
 .url-cell {
   max-width: 200px;

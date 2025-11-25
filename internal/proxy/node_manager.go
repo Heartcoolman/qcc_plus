@@ -41,10 +41,22 @@ func (p *Server) addNodeWithMethod(acc *Account, name, rawURL, apiKey string, we
 	}
 	healthMethod = normalizeHealthCheckMethod(healthMethod)
 	if healthMethodRequiresAPIKey(healthMethod) && apiKey == "" {
-		return nil, errors.New("health_check_method requires api key")
+		if healthMethod == HealthCheckMethodAPI {
+			healthMethod = HealthCheckMethodHEAD // 无密钥时降级为 HEAD 探活
+		} else {
+			return nil, errors.New("health_check_method requires api key")
+		}
+	}
+	sortOrder := nextSortOrder(acc)
+	if p.store != nil {
+		if maxOrder, err := p.store.MaxSortOrder(context.Background(), acc.ID); err == nil {
+			if maxOrder >= sortOrder {
+				sortOrder = maxOrder + 1
+			}
+		}
 	}
 	id := fmt.Sprintf("n-%d", time.Now().UnixNano())
-	node := &Node{ID: id, Name: name, URL: u, APIKey: apiKey, HealthCheckMethod: healthMethod, AccountID: acc.ID, CreatedAt: time.Now(), Weight: weight}
+	node := &Node{ID: id, Name: name, URL: u, APIKey: apiKey, HealthCheckMethod: healthMethod, AccountID: acc.ID, CreatedAt: time.Now(), Weight: weight, SortOrder: sortOrder}
 
 	p.mu.Lock()
 	acc.Nodes[id] = node
@@ -55,7 +67,7 @@ func (p *Server) addNodeWithMethod(acc *Account, name, rawURL, apiKey string, we
 	needSwitch := cur == nil || curFailed || node.Weight < cur.Weight
 	var rec store.NodeRecord
 	if p.store != nil {
-		rec = store.NodeRecord{ID: id, Name: name, BaseURL: rawURL, APIKey: apiKey, HealthCheckMethod: healthMethod, AccountID: acc.ID, Weight: weight, CreatedAt: node.CreatedAt}
+		rec = store.NodeRecord{ID: id, Name: name, BaseURL: rawURL, APIKey: apiKey, HealthCheckMethod: healthMethod, AccountID: acc.ID, Weight: weight, SortOrder: sortOrder, CreatedAt: node.CreatedAt}
 	}
 	p.mu.Unlock()
 
@@ -106,11 +118,16 @@ func (p *Server) updateNode(id, name, rawURL string, apiKey *string, weight int,
 	}
 	desiredMethod := n.HealthCheckMethod
 	if healthMethod != nil {
-		desiredMethod = normalizeHealthCheckMethod(*healthMethod)
+		desiredMethod = *healthMethod
 	}
+	desiredMethod = normalizeHealthCheckMethod(desiredMethod)
 	if healthMethodRequiresAPIKey(desiredMethod) && newAPIKey == "" {
-		p.mu.Unlock()
-		return errors.New("health_check_method requires api key")
+		if desiredMethod == HealthCheckMethodAPI {
+			desiredMethod = HealthCheckMethodHEAD
+		} else {
+			p.mu.Unlock()
+			return errors.New("health_check_method requires api key")
+		}
 	}
 	oldWeight := n.Weight
 	if name != "" {
@@ -384,4 +401,22 @@ func (p *Server) enableNode(id string) error {
 		p.logger.Printf("auto-switch to enabled node %s (weight %d)", n.Name, n.Weight)
 	}
 	return nil
+}
+
+// nextSortOrder 计算账号内下一个可用的排序值。
+func nextSortOrder(acc *Account) int {
+	if acc == nil || len(acc.Nodes) == 0 {
+		return 1
+	}
+	maxOrder := 0
+	for _, n := range acc.Nodes {
+		if n.SortOrder > maxOrder {
+			maxOrder = n.SortOrder
+		}
+	}
+	// 如果历史数据尚未写入排序值，则使用节点数量作为基准。
+	if maxOrder == 0 {
+		maxOrder = len(acc.Nodes)
+	}
+	return maxOrder + 1
 }

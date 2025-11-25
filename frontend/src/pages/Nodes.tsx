@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { closestCenter, DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import Card from '../components/Card'
 import Modal from '../components/Modal'
 import Toast from '../components/Toast'
@@ -6,6 +9,7 @@ import useDialog from '../hooks/useDialog'
 import usePrompt from '../hooks/usePrompt'
 import api from '../services/api'
 import type { Account, Node } from '../types'
+import { formatBeijingTime } from '../utils/date'
 import './Nodes.css'
 
 interface EditForm {
@@ -35,6 +39,9 @@ export default function Nodes() {
   const [detailNode, setDetailNode] = useState<Node | null>(null)
   const [editingNode, setEditingNode] = useState<Node | null>(null)
   const [editForm, setEditForm] = useState<EditForm>({ name: '', base_url: '', weight: '1', api_key: '', health_check_method: 'api' })
+  const [savingOrder, setSavingOrder] = useState(false)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const dialog = useDialog()
   const prompt = usePrompt()
 
@@ -42,6 +49,22 @@ export default function Nodes() {
     setToast({ message, type })
     setTimeout(() => setToast(null), 2200)
   }
+
+  const sortByOrder = useCallback((list: Node[]) => {
+    return list
+      .slice()
+      .sort((a, b) => {
+        const sa = a.sort_order ?? 0
+        const sb = b.sort_order ?? 0
+        if (sa !== sb) return sa - sb
+        const wa = a.weight ?? 0
+        const wb = b.weight ?? 0
+        if (wa !== wb) return wa - wb
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0
+        return ta - tb
+      })
+  }, [])
 
   const loadAccounts = async () => {
     try {
@@ -58,7 +81,7 @@ export default function Nodes() {
     setLoading(true)
     try {
       const list = await api.getNodes(accountId)
-      setNodes(list)
+      setNodes(sortByOrder(list))
     } catch (err) {
       showToast('加载失败', 'error')
     } finally {
@@ -261,10 +284,8 @@ export default function Nodes() {
   }
 
   const formatDateTime = (val?: string | null) => {
-    if (!val) return '从未检查'
-    const date = new Date(val)
-    if (Number.isNaN(date.getTime())) return '从未检查'
-    return date.toLocaleString('zh-CN')
+    const formatted = formatBeijingTime(val)
+    return formatted === '--' ? '从未检查' : formatted
   }
 
   const formatHealthMethod = (val?: 'api' | 'head' | 'cli') => {
@@ -274,6 +295,42 @@ export default function Nodes() {
   }
 
   const requiresApiKey = (method?: 'api' | 'head' | 'cli') => method === 'api' || method === 'cli'
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setDraggingId(String(event.active.id))
+  }
+
+  const handleDragCancel = () => setDraggingId(null)
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setDraggingId(null)
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const activeId = String(active.id)
+    const overId = String(over.id)
+    const oldIndex = nodes.findIndex((n) => n.id === activeId)
+    const newIndex = nodes.findIndex((n) => n.id === overId)
+    if (oldIndex === -1 || newIndex === -1) return
+    const prevNodes = nodes
+    const reordered = arrayMove(nodes, oldIndex, newIndex).map((n, idx) => ({
+      ...n,
+      sort_order: idx + 1,
+    }))
+    setNodes(reordered)
+    setSavingOrder(true)
+    try {
+      await api.reorderNodes(
+        reordered.map((n, idx) => ({ id: n.id, sort_order: idx + 1 })),
+        accountId
+      )
+      showToast('排序已保存')
+    } catch (err) {
+      setNodes(prevNodes)
+      showToast((err as Error).message || '保存排序失败', 'error')
+    } finally {
+      setSavingOrder(false)
+    }
+  }
 
   const renderStat = (label: string, value: string | number | undefined) => (
     <div className="stat-item">
@@ -288,6 +345,106 @@ export default function Nodes() {
       return
     }
     setDetailNode(node)
+  }
+
+  const NodeRow = ({ node }: { node: Node }) => {
+    const health = parseHealthRate(node.health_rate)
+    const status = statusInfo(node)
+    const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+      id: node.id,
+      disabled: loading || savingOrder,
+    })
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      position: 'relative' as const,
+      zIndex: isDragging ? 2 : 1,
+    }
+    const dragging = isDragging || draggingId === node.id
+
+    return (
+      <tr ref={setNodeRef} style={style} className={dragging ? 'dragging' : ''}>
+        <td className="drag-handle-cell">
+          <button
+            type="button"
+            className="drag-handle"
+            {...attributes}
+            {...listeners}
+            ref={setActivatorNodeRef}
+            disabled={loading || savingOrder}
+            aria-label="拖拽排序"
+            title="拖拽排序"
+          >
+            ⋮⋮
+          </button>
+        </td>
+        <td>{node.name || '未命名'}</td>
+        <td>
+          <div className="url-cell" title={node.base_url || '-'}>
+            {node.base_url || '-'}
+          </div>
+        </td>
+        <td>
+          <div
+            className={`pill ${status.cls}`}
+            style={{ cursor: node.failed && node.last_error ? 'pointer' : 'default' }}
+            onClick={() => (node.failed ? openErrorDetail(node) : undefined)}
+          >
+            <span>{status.icon}</span>
+            <span>{status.label}</span>
+          </div>
+        </td>
+        <td>
+          {health === null ? (
+            '-'
+          ) : (
+            <span className={healthClass(health)}>{health.toFixed(1)}%</span>
+          )}
+        </td>
+        <td title="值越小优先级越高">{node.weight || 1}</td>
+        <td>{node.requests ?? 0}</td>
+        <td>
+          <div className="table-actions" style={{ rowGap: 6 }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {!node.active && !node.disabled && (
+                <button
+                  className="btn ghost"
+                  type="button"
+                  onClick={() => handleAction('switch', node)}
+                  disabled={actionId === node.id}
+                >
+                  切换
+                </button>
+              )}
+              <button className="btn ghost" type="button" onClick={() => setEditingNode(node)}>
+                编辑
+              </button>
+              <button className="btn ghost" type="button" onClick={() => setDetailNode(node)}>
+                查看详情
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button
+                className="btn warn"
+                type="button"
+                onClick={() => handleAction('toggle', node)}
+                disabled={actionId === node.id}
+              >
+                {node.disabled ? '启用' : '禁用'}
+              </button>
+              <button
+                className="btn danger"
+                type="button"
+                onClick={() => handleAction('del', node)}
+                disabled={actionId === node.id}
+              >
+                删除
+              </button>
+            </div>
+          </div>
+        </td>
+      </tr>
+    )
   }
 
   return (
@@ -336,11 +493,15 @@ export default function Nodes() {
             <option value="disabled">已禁用</option>
           </select>
         </div>
+        <div className="muted" style={{ margin: '-8px 0 12px', fontSize: 12 }}>
+          拖拽左侧手柄调整节点顺序，自动保存{savingOrder ? '中…' : ''}
+        </div>
 
         <div className="table-wrapper">
           <table>
             <thead>
               <tr>
+                <th style={{ width: 54 }}>排序</th>
                 <th>名称</th>
                 <th>Base URL</th>
                 <th>状态</th>
@@ -350,91 +511,29 @@ export default function Nodes() {
                 <th style={{ minWidth: 230 }}>操作</th>
               </tr>
             </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={7}>加载中...</td>
-                </tr>
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7}>暂无节点</td>
-                </tr>
-              ) : (
-                filtered.map((n) => {
-                  const health = parseHealthRate(n.health_rate)
-                  const status = statusInfo(n)
-                  return (
-                    <tr key={n.id}>
-                      <td>{n.name || '未命名'}</td>
-                      <td>
-                        <div className="url-cell" title={n.base_url || '-'}>
-                          {n.base_url || '-'}
-                        </div>
-                      </td>
-                      <td>
-                        <div
-                          className={`pill ${status.cls}`}
-                          style={{ cursor: n.failed && n.last_error ? 'pointer' : 'default' }}
-                          onClick={() => (n.failed ? openErrorDetail(n) : undefined)}
-                        >
-                          <span>{status.icon}</span>
-                          <span>{status.label}</span>
-                        </div>
-                      </td>
-                      <td>
-                        {health === null ? (
-                          '-'
-                        ) : (
-                          <span className={healthClass(health)}>{health.toFixed(1)}%</span>
-                        )}
-                      </td>
-                      <td title="值越小优先级越高">{n.weight || 1}</td>
-                      <td>{n.requests ?? 0}</td>
-                      <td>
-                        <div className="table-actions" style={{ rowGap: 6 }}>
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                            {!n.active && !n.disabled && (
-                              <button
-                                className="btn ghost"
-                                type="button"
-                                onClick={() => handleAction('switch', n)}
-                                disabled={actionId === n.id}
-                              >
-                                切换
-                              </button>
-                            )}
-                            <button className="btn ghost" type="button" onClick={() => setEditingNode(n)}>
-                              编辑
-                            </button>
-                            <button className="btn ghost" type="button" onClick={() => setDetailNode(n)}>
-                              查看详情
-                            </button>
-                          </div>
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                            <button
-                              className="btn warn"
-                              type="button"
-                              onClick={() => handleAction('toggle', n)}
-                              disabled={actionId === n.id}
-                            >
-                              {n.disabled ? '启用' : '禁用'}
-                            </button>
-                            <button
-                              className="btn danger"
-                              type="button"
-                              onClick={() => handleAction('del', n)}
-                              disabled={actionId === n.id}
-                            >
-                              删除
-                            </button>
-                          </div>
-                        </div>
-                      </td>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              <SortableContext items={filtered.map((n) => n.id)} strategy={verticalListSortingStrategy}>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8}>加载中...</td>
                     </tr>
-                  )
-                })
-              )}
-            </tbody>
+                  ) : filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={8}>暂无节点</td>
+                    </tr>
+                  ) : (
+                    filtered.map((n) => <NodeRow key={n.id} node={n} />)
+                  )}
+                </tbody>
+              </SortableContext>
+            </DndContext>
           </table>
         </div>
       </Card>
