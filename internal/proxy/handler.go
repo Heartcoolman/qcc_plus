@@ -118,7 +118,18 @@ func (p *Server) handler() http.Handler {
 			return
 		}
 
-		if (strings.HasPrefix(path, "/api/nodes/") && (strings.HasSuffix(path, "/metrics") || strings.HasSuffix(path, "/health-history"))) ||
+
+		// Allow shared health history access without session when share_token is present.
+		if strings.HasPrefix(path, "/api/nodes/") && strings.HasSuffix(path, "/health-history") {
+			if r.URL.Query().Get("share_token") != "" {
+				p.handleNodeAPIRoutes(w, r)
+				return
+			}
+			apiMux.ServeHTTP(w, r)
+			return
+		}
+
+		if (strings.HasPrefix(path, "/api/nodes/") && strings.HasSuffix(path, "/metrics")) ||
 			(strings.HasPrefix(path, "/api/accounts/") && strings.HasSuffix(path, "/metrics")) ||
 			path == "/api/metrics/aggregate" || path == "/api/metrics/cleanup" {
 			apiMux.ServeHTTP(w, r)
