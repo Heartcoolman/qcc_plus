@@ -59,10 +59,14 @@ dockers:
 
     # 额外需要的文件（放入构建上下文）
     extra_files:
+      - go.mod
+      - go.sum
       - scripts/docker-entrypoint.sh
       - CHANGELOG.md
       - cccli/
       - web/
+      - cmd/
+      - internal/
 
     # 构建参数（与现有脚本保持一致）
     build_flag_templates:
@@ -89,10 +93,14 @@ dockers:
 
     # 额外需要的文件（放入构建上下文）
     extra_files:
+      - go.mod
+      - go.sum
       - scripts/docker-entrypoint.sh
       - CHANGELOG.md
       - cccli/
       - web/
+      - cmd/
+      - internal/
 
     build_flag_templates:
       - "--platform=linux/arm64"
