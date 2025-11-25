@@ -137,7 +137,8 @@ docker compose up -d
 - **[docs/quick-start-multi-tenant.md](docs/quick-start-multi-tenant.md)** - 多租户快速开始
 - **[docs/cloudflare-tunnel.md](docs/cloudflare-tunnel.md)** - Cloudflare Tunnel 集成指南
 - **[docs/health_check_mechanism.md](docs/health_check_mechanism.md)** - 健康检查机制
-- **[docs/goreleaser-guide.md](docs/goreleaser-guide.md)** - GoReleaser 自动化发布指南 ⭐ 新增
+- **[docs/release-workflow.md](docs/release-workflow.md)** - 发布流程最佳实践 ⭐ 必读
+- **[docs/goreleaser-guide.md](docs/goreleaser-guide.md)** - GoReleaser 自动化发布指南
 - **[docs/docker-hub-publish.md](docs/docker-hub-publish.md)** - Docker Hub 发布流程（手动模式，已弃用）
 - **[docs/ci-cd-troubleshooting.md](docs/ci-cd-troubleshooting.md)** - CI/CD 部署故障排查指南
 
