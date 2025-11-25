@@ -6,6 +6,26 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-11-25
+
+### 新增
+- **节点拖拽排序功能**：支持通过拖拽调整节点优先级顺序
+- **统一时间显示**：所有时间字段统一显示为北京时间（UTC+8）
+  - 版本信息构建时间
+  - 节点健康检查时间
+  - 通知时间
+  - 会话过期时间
+
+### 修复
+- 修复时区处理和通知时间显示问题
+- 修复拖拽排序时的报错和时间格式显示
+- 修复登录页面版本号显示双 v 的问题（v1.1.0 → 1.1.0）
+- 修复部署脚本不同步 tags 导致版本号不正确的问题
+
+### 改进
+- 优化时间处理方案，统一使用 `BeijingTime` 类型
+- 规范节点排序逻辑，使用 `weight` 字段替代 `order`
+
 ## [1.1.0] - 2025-11-24
 
 ### 新增
@@ -123,6 +143,7 @@
 - 前端：React 18, TypeScript, Vite, Chart.js
 - 部署：Docker Compose, Cloudflare Tunnel
 
-[unreleased]: https://github.com/yxhpy/qcc_plus/compare/v1.1.0...HEAD
+[unreleased]: https://github.com/yxhpy/qcc_plus/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/yxhpy/qcc_plus/releases/tag/v1.2.0
 [1.1.0]: https://github.com/yxhpy/qcc_plus/releases/tag/v1.1.0
 [1.0.0]: https://github.com/yxhpy/qcc_plus/releases/tag/v1.0.0

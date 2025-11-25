@@ -4,9 +4,9 @@
 ## 最后更新
 - **更新日期**: 2025-11-25
 - **更新人**: Claude Code
-- **当前版本**: v1.1.0
-- **最新功能**: 集成 GoReleaser 自动化发布流程 - 一键完成构建、发布、Docker 镜像推送
-- **最新更新**: 添加 GoReleaser 配置和 GitHub Actions 自动发布工作流，发布流程从 10+ 分钟简化为一条命令
+- **当前版本**: v1.2.0
+- **最新功能**: 节点拖拽排序和统一北京时间显示
+- **最新更新**: 添加节点拖拽排序功能，统一所有时间字段显示为北京时间（UTC+8）
 - **GitHub**: https://github.com/yxhpy/qcc_plus
 - **Docker Hub**: https://hub.docker.com/r/yxhpy520/qcc_plus
 
