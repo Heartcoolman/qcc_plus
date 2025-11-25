@@ -37,6 +37,9 @@ func (s *Store) migrate(ctx context.Context) error {
 	if err := s.ensureNodesTable(ctx); err != nil {
 		return err
 	}
+	if err := s.ensureMonitorShareTable(ctx); err != nil {
+		return err
+	}
 	if err := s.ensureMetricsTables(ctx); err != nil {
 		return err
 	}
@@ -46,7 +49,10 @@ func (s *Store) migrate(ctx context.Context) error {
 	if err := s.ensureTunnelConfigTable(ctx); err != nil {
 		return err
 	}
-	return s.ensureNotificationTables(ctx)
+	if err := s.ensureNotificationTables(ctx); err != nil {
+		return err
+	}
+	return s.ensureMonitorSharesTable(ctx)
 }
 
 func (s *Store) Close() error {

@@ -66,6 +66,16 @@ func (p *Server) handleFailure(nodeID string, errMsg string) {
 				OccurredAt: time.Now(),
 			})
 		}
+		// 向该账号所有 WebSocket 连接推送离线事件。
+		if p.wsHub != nil && acc != nil {
+			p.wsHub.Broadcast(acc.ID, "node_status", map[string]interface{}{
+				"node_id":   nodeID,
+				"node_name": nodeName,
+				"status":    "offline",
+				"error":     errMsg,
+				"timestamp": time.Now().Format(time.RFC3339),
+			})
+		}
 		p.selectBestAndActivate(acc, "节点故障")
 	}
 }
@@ -213,6 +223,14 @@ func (p *Server) checkNodeHealth(acc *Account, id string) {
 				Content:    fmt.Sprintf("**节点名称**: %s\n**恢复时间**: %s", n.Name, timeutil.FormatBeijingTime(time.Now())),
 				DedupKey:   n.ID,
 				OccurredAt: time.Now(),
+			})
+		}
+		if p.wsHub != nil && acc != nil && n != nil {
+			p.wsHub.Broadcast(acc.ID, "node_status", map[string]interface{}{
+				"node_id":   n.ID,
+				"node_name": n.Name,
+				"status":    "online",
+				"timestamp": time.Now().Format(time.RFC3339),
 			})
 		}
 		p.maybePromoteRecovered(n)

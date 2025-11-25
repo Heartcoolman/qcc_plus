@@ -85,12 +85,21 @@ func (p *Server) handler() http.Handler {
 	apiMux.HandleFunc("/api/accounts/", p.requireSession(p.handleGetAccountMetrics))
 	apiMux.HandleFunc("/api/metrics/aggregate", p.requireSession(p.handleAggregateMetrics))
 	apiMux.HandleFunc("/api/metrics/cleanup", p.requireSession(p.handleCleanupMetrics))
+	apiMux.HandleFunc("/api/monitor/dashboard", p.requireSession(p.handleMonitorDashboard))
+	apiMux.HandleFunc("/api/monitor/shares", p.requireSession(p.handleMonitorShares))
+	apiMux.HandleFunc("/api/monitor/shares/", p.requireSession(p.handleRevokeMonitorShare))
+	apiMux.HandleFunc("/api/monitor/share/", p.handleAccessMonitorShare)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
 		if path == "/version" {
 			p.handleVersion(w, r)
+			return
+		}
+
+		if path == "/api/monitor/ws" {
+			p.handleMonitorWebSocket(w, r)
 			return
 		}
 
@@ -112,6 +121,11 @@ func (p *Server) handler() http.Handler {
 		if (strings.HasPrefix(path, "/api/nodes/") && strings.HasSuffix(path, "/metrics")) ||
 			(strings.HasPrefix(path, "/api/accounts/") && strings.HasSuffix(path, "/metrics")) ||
 			path == "/api/metrics/aggregate" || path == "/api/metrics/cleanup" {
+			apiMux.ServeHTTP(w, r)
+			return
+		}
+
+		if strings.HasPrefix(path, "/api/monitor/") {
 			apiMux.ServeHTTP(w, r)
 			return
 		}
@@ -184,7 +198,8 @@ func (p *Server) requireSession(next http.HandlerFunc) http.HandlerFunc {
 			strings.HasPrefix(r.URL.Path, "/api/notification/") ||
 			strings.HasPrefix(r.URL.Path, "/api/nodes/") ||
 			strings.HasPrefix(r.URL.Path, "/api/accounts/") ||
-			strings.HasPrefix(r.URL.Path, "/api/metrics/")
+			strings.HasPrefix(r.URL.Path, "/api/metrics/") ||
+			strings.HasPrefix(r.URL.Path, "/api/monitor/")
 
 		cookie, err := r.Cookie("session_token")
 		if err != nil || cookie.Value == "" {

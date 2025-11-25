@@ -192,3 +192,22 @@ type SubscriptionWithChannel struct {
 	Subscription NotificationSubscriptionRecord
 	Channel      NotificationChannelRecord
 }
+
+type MonitorShareRecord struct {
+	ID        string     `json:"id"`
+	AccountID string     `json:"account_id"`
+	Token     string     `json:"token"` // UUID token
+	ExpireAt  time.Time  `json:"expire_at"`
+	CreatedBy string     `json:"created_by"`
+	CreatedAt time.Time  `json:"created_at"`
+	Revoked   bool       `json:"revoked"`
+	RevokedAt *time.Time `json:"revoked_at,omitempty"`
+}
+
+// QueryMonitorSharesParams 查询参数
+type QueryMonitorSharesParams struct {
+	AccountID      string
+	IncludeRevoked bool
+	Limit          int
+	Offset         int
+}

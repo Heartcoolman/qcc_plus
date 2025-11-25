@@ -25,6 +25,7 @@ type Builder struct {
 	retries            int
 	failLimit          int
 	healthEvery        time.Duration
+	healthAllInterval  time.Duration
 	storeDSN           string
 	adminKey           string
 	defaultAccountName string
@@ -115,6 +116,14 @@ func (b *Builder) WithHealthEvery(d time.Duration) *Builder {
 	return b
 }
 
+// WithHealthAllInterval 设置全量健康检查间隔；<=0 将在 Build 时应用默认值或环境变量。
+func (b *Builder) WithHealthAllInterval(d time.Duration) *Builder {
+	if d > 0 {
+		b.healthAllInterval = d
+	}
+	return b
+}
+
 // WithAdminKey 设置管理员访问密钥。
 func (b *Builder) WithAdminKey(key string) *Builder {
 	b.adminKey = key
@@ -198,6 +207,19 @@ func (b *Builder) Build() (*Server, error) {
 	if v := os.Getenv("METRICS_SCHEDULER_ENABLED"); v != "" {
 		schedulerEnabled = !(v == "0" || strings.EqualFold(v, "false") || strings.EqualFold(v, "off"))
 	}
+
+	healthAllInterval := b.healthAllInterval
+	if healthAllInterval == 0 {
+		raw := os.Getenv("PROXY_HEALTH_CHECK_ALL_INTERVAL")
+		if raw == "" {
+			healthAllInterval = defaultHealthAllInterval
+		} else if d, err := time.ParseDuration(raw); err == nil {
+			healthAllInterval = d
+		} else {
+			logger.Printf("invalid PROXY_HEALTH_CHECK_ALL_INTERVAL=%s, fallback to %v", raw, defaultHealthAllInterval)
+			healthAllInterval = defaultHealthAllInterval
+		}
+	}
 	healthRT := transport
 	transport = &retryTransport{base: transport, attempts: b.retries, logger: logger}
 
@@ -233,6 +255,9 @@ func (b *Builder) Build() (*Server, error) {
 		runner = b.cliRunner
 	}
 
+	hub := NewWSHub()
+	go hub.Run()
+
 	srv := &Server{
 		accounts:         make(map[string]*Account),
 		accountByID:      make(map[string]*Account),
@@ -248,6 +273,11 @@ func (b *Builder) Build() (*Server, error) {
 		defaultAccName:   defaultAccountName,
 		sessionMgr:       NewSessionManager(defaultSessionTTL),
 		metricsScheduler: metricsScheduler,
+		wsHub:            hub,
+	}
+
+	if healthAllInterval > 0 {
+		srv.healthScheduler = NewHealthScheduler(srv, healthAllInterval, logger)
 	}
 
 	if st != nil {

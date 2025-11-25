@@ -136,6 +136,27 @@ func (s *Store) ensureNodesTable(ctx context.Context) error {
 	return nil
 }
 
+func (s *Store) ensureMonitorShareTable(ctx context.Context) error {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+	stmt := `CREATE TABLE IF NOT EXISTS monitor_shares (
+		id VARCHAR(64) PRIMARY KEY,
+		account_id VARCHAR(64) NOT NULL,
+		token VARCHAR(128) NOT NULL,
+		expire_at DATETIME NULL,
+		created_by VARCHAR(64) NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		revoked BOOLEAN DEFAULT FALSE,
+		revoked_at DATETIME NULL,
+		UNIQUE KEY uniq_monitor_share_token (token),
+		KEY idx_monitor_share_account (account_id)
+	)`
+	if _, err := s.db.ExecContext(ctx, stmt); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *Store) ensureConfigTable(ctx context.Context) error {
 	hasAccount, err := s.columnExists(context.Background(), "config", "account_id")
 	if err != nil {
@@ -333,6 +354,26 @@ func (s *Store) ensureNotificationTables(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Store) ensureMonitorSharesTable(ctx context.Context) error {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+	stmt := `CREATE TABLE IF NOT EXISTS monitor_shares (
+		id VARCHAR(64) PRIMARY KEY,
+		account_id VARCHAR(64) NOT NULL,
+		token VARCHAR(64) UNIQUE NOT NULL,
+		expire_at TIMESTAMP NULL,
+		created_by VARCHAR(255) NOT NULL,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		revoked BOOLEAN NOT NULL DEFAULT FALSE,
+		revoked_at TIMESTAMP NULL,
+		INDEX idx_account_id (account_id),
+		INDEX idx_token (token),
+		INDEX idx_created_at (created_at)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
+	_, err := s.db.ExecContext(ctx, stmt)
+	return err
 }
 
 func (s *Store) ensureDefaultAccount(ctx context.Context) error {

@@ -71,6 +71,14 @@ func main() {
 				healthEvery = time.Duration(n) * time.Second
 			}
 		}
+		healthAllInterval := 5 * time.Minute
+		if v := firstNonEmpty(os.Getenv("PROXY_HEALTH_CHECK_ALL_INTERVAL"), ""); v != "" {
+			if d, err := time.ParseDuration(v); err == nil {
+				healthAllInterval = d
+			} else {
+				log.Printf("invalid PROXY_HEALTH_CHECK_ALL_INTERVAL=%s, fallback to %v", v, healthAllInterval)
+			}
+		}
 		mysqlDSN := os.Getenv("PROXY_MYSQL_DSN")
 		adminKey := os.Getenv("ADMIN_API_KEY")
 		if adminKey == "" {
@@ -93,6 +101,7 @@ func main() {
 			WithRetry(retryMax).
 			WithFailLimit(failLimit).
 			WithHealthEvery(healthEvery).
+			WithHealthAllInterval(healthAllInterval).
 			WithStoreDSN(mysqlDSN).
 			WithAdminKey(adminKey).
 			WithDefaultAccount(defaultAccountName, defaultProxyKey).

@@ -44,13 +44,22 @@ type Server struct {
 	adminKey         string
 	notifyMgr        *notify.Manager
 	metricsScheduler *MetricsScheduler
+	healthScheduler  *HealthScheduler
 
 	tunnelMgr *tunnel.Manager
 	tunnelMu  sync.Mutex
+
+	wsHub *WSHub
 }
 
 // Start 运行反向代理并阻塞直到关闭。
 func (p *Server) Start() error {
+	if p.healthScheduler != nil {
+		if err := p.healthScheduler.Start(); err != nil {
+			return err
+		}
+		defer p.healthScheduler.Stop()
+	}
 	if p.metricsScheduler != nil {
 		if err := p.metricsScheduler.Start(); err != nil {
 			return err
@@ -86,6 +95,9 @@ func (p *Server) Start() error {
 
 // Stop 用于优雅关闭后台任务。
 func (p *Server) Stop() {
+	if p.healthScheduler != nil {
+		p.healthScheduler.Stop()
+	}
 	if p.metricsScheduler != nil {
 		p.metricsScheduler.Stop()
 	}

@@ -124,6 +124,96 @@ func (s *Store) QueryMetrics(ctx context.Context, q MetricsQuery) ([]MetricsReco
 	return res, rows.Err()
 }
 
+// GetNode24hTrend 获取指定节点最近 24 小时的小时级聚合数据，按时间升序返回。
+func (s *Store) GetNode24hTrend(ctx context.Context, accountID, nodeID string) ([]MetricsRecord, error) {
+	accountID = normalizeAccount(accountID)
+	now := time.Now().UTC()
+	from := now.Add(-24 * time.Hour)
+
+	query := `
+        SELECT bucket_start, requests_total, requests_success, requests_failed,
+               response_time_sum_ms, response_time_count
+        FROM node_metrics_hourly
+        WHERE account_id = ? AND node_id = ? AND bucket_start >= ? AND bucket_start < ?
+        ORDER BY bucket_start ASC
+    `
+
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+	rows, err := s.db.QueryContext(ctx, query, accountID, nodeID, from, now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []MetricsRecord
+	for rows.Next() {
+		var rec MetricsRecord
+		if err := rows.Scan(&rec.Timestamp, &rec.RequestsTotal, &rec.RequestsSuccess, &rec.RequestsFailed, &rec.ResponseTimeSumMs, &rec.ResponseTimeCount); err != nil {
+			return nil, err
+		}
+		rec.AccountID = accountID
+		rec.NodeID = nodeID
+		res = append(res, rec)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// GetNodes24hTrend 批量获取多个节点最近 24 小时的趋势数据，结果按 node_id 和时间升序排列。
+func (s *Store) GetNodes24hTrend(ctx context.Context, accountID string, nodeIDs []string) (map[string][]MetricsRecord, error) {
+	result := make(map[string][]MetricsRecord)
+	if len(nodeIDs) == 0 {
+		return result, nil
+	}
+	accountID = normalizeAccount(accountID)
+	now := time.Now().UTC()
+	from := now.Add(-24 * time.Hour)
+
+	placeholders := strings.Repeat("?,", len(nodeIDs))
+	placeholders = strings.TrimSuffix(placeholders, ",")
+
+	query := fmt.Sprintf(`
+        SELECT node_id, bucket_start, requests_total, requests_success, requests_failed,
+               response_time_sum_ms, response_time_count
+        FROM node_metrics_hourly
+        WHERE account_id = ? AND node_id IN (%s) AND bucket_start >= ? AND bucket_start < ?
+        ORDER BY node_id ASC, bucket_start ASC
+    `, placeholders)
+
+	args := make([]interface{}, 0, len(nodeIDs)+3)
+	args = append(args, accountID)
+	for _, id := range nodeIDs {
+		args = append(args, id)
+	}
+	args = append(args, from, now)
+
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var rec MetricsRecord
+		var nodeID string
+		if err := rows.Scan(&nodeID, &rec.Timestamp, &rec.RequestsTotal, &rec.RequestsSuccess, &rec.RequestsFailed, &rec.ResponseTimeSumMs, &rec.ResponseTimeCount); err != nil {
+			return nil, err
+		}
+		rec.AccountID = accountID
+		rec.NodeID = nodeID
+		result[nodeID] = append(result[nodeID], rec)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 // AggregateMetrics 将低粒度数据聚合到更高粒度。
 // target 取值：hour(原始->小时)、day(小时->天)、month(天->月)。
 func (s *Store) AggregateMetrics(ctx context.Context, accountID string, target MetricsGranularity, from, to time.Time) error {
