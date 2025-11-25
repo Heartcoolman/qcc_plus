@@ -9,6 +9,7 @@ import api from '../services/api'
 import type {
   Account,
   CreateMonitorShareRequest,
+  HealthCheckRecord,
   MonitorDashboard,
   MonitorNode,
   MonitorShare,
@@ -35,6 +36,8 @@ export default function Monitor({ shared = false }: MonitorProps) {
   const [shares, setShares] = useState<MonitorShare[]>([])
   const [shareLoading, setShareLoading] = useState(false)
   const [expireIn, setExpireIn] = useState<CreateMonitorShareRequest['expire_in']>('24h')
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0)
+  const [healthEvents, setHealthEvents] = useState<Record<string, HealthCheckRecord>>({})
 
   const wsAccountId = shared ? undefined : accountId || undefined
   const { connected, lastMessage } = useMonitorWebSocket(wsAccountId, shareToken)
@@ -68,6 +71,7 @@ export default function Monitor({ shared = false }: MonitorProps) {
           ? await api.getSharedMonitor(shareToken)
           : await api.getMonitorDashboard(accountId)
         setDashboard(data)
+        setHistoryRefreshKey((v) => v + 1)
       } catch (err) {
         showToast((err as Error).message || '加载失败', 'error')
       } finally {
@@ -116,28 +120,52 @@ export default function Monitor({ shared = false }: MonitorProps) {
   }, [loadShares])
 
   useEffect(() => {
+    setHealthEvents({})
+  }, [accountId, shareToken])
+
+  useEffect(() => {
     if (!lastMessage) return
+
+    if (lastMessage.type === 'health_check') {
+      const payload = lastMessage.payload
+      setHealthEvents((prev) => ({
+        ...prev,
+        [payload.node_id]: {
+          node_id: payload.node_id,
+          check_time: payload.check_time,
+          success: payload.success,
+          response_time_ms: payload.response_time_ms ?? 0,
+          error_message: payload.error_message || '',
+          check_method: payload.check_method || 'api',
+        },
+      }))
+      return
+    }
+
+    if (lastMessage.type !== 'node_status' && lastMessage.type !== 'node_metrics') return
+
+    const payload = lastMessage.payload as typeof lastMessage.payload
     setDashboard((prev) => {
       if (!prev) return prev
-      const idx = prev.nodes.findIndex((n) => n.id === lastMessage.payload.node_id)
+      const idx = prev.nodes.findIndex((n) => n.id === payload.node_id)
       if (idx === -1) return prev
       const prevNode = prev.nodes[idx]
       const nextNode: MonitorNode = {
         ...prevNode,
-        status: (lastMessage.payload.status as MonitorNode['status'] | undefined) || prevNode.status,
-        last_error: lastMessage.payload.error ?? prevNode.last_error,
-        success_rate: lastMessage.payload.success_rate ?? prevNode.success_rate,
-        avg_response_time: lastMessage.payload.avg_response_time ?? prevNode.avg_response_time,
-        last_ping_ms: lastMessage.payload.last_ping_ms ?? prevNode.last_ping_ms,
-        last_check_at: lastMessage.payload.timestamp || prevNode.last_check_at,
+        status: (payload.status as MonitorNode['status'] | undefined) || prevNode.status,
+        last_error: payload.error ?? prevNode.last_error,
+        success_rate: payload.success_rate ?? prevNode.success_rate,
+        avg_response_time: payload.avg_response_time ?? prevNode.avg_response_time,
+        last_ping_ms: payload.last_ping_ms ?? prevNode.last_ping_ms,
+        last_check_at: payload.timestamp || prevNode.last_check_at,
       }
-      if (lastMessage.payload.success_rate !== undefined && lastMessage.payload.timestamp) {
+      if (payload.success_rate !== undefined && payload.timestamp) {
         const merged = prevNode.trend_24h
-          .filter((p) => p.timestamp !== lastMessage.payload.timestamp)
+          .filter((p) => p.timestamp !== payload.timestamp)
           .concat({
-            timestamp: lastMessage.payload.timestamp,
-            success_rate: lastMessage.payload.success_rate,
-            avg_time: lastMessage.payload.avg_response_time ?? prevNode.avg_response_time,
+            timestamp: payload.timestamp,
+            success_rate: payload.success_rate,
+            avg_time: payload.avg_response_time ?? prevNode.avg_response_time,
           })
           .sort((a, b) => {
             const ta = parseToDate(a.timestamp)?.getTime() || 0
@@ -152,7 +180,7 @@ export default function Monitor({ shared = false }: MonitorProps) {
       return {
         ...prev,
         nodes: nextNodes,
-        updated_at: lastMessage.payload.timestamp || prev.updated_at,
+        updated_at: payload.timestamp || prev.updated_at,
       }
     })
   }, [lastMessage])
@@ -312,7 +340,13 @@ export default function Monitor({ shared = false }: MonitorProps) {
         ) : dashboard && dashboard.nodes.length > 0 ? (
           <div className="nodes-grid">
             {dashboard.nodes.map((node) => (
-              <NodeCard key={node.id} node={node} />
+				<NodeCard
+					key={node.id}
+					node={node}
+					historyRefreshKey={historyRefreshKey}
+					healthEvent={healthEvents[node.id]}
+					historyDisabled={shared}
+				/>
             ))}
           </div>
         ) : (

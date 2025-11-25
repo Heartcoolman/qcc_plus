@@ -56,7 +56,12 @@ export default function SharedMonitor() {
 
       <div className="nodes-grid">
         {dashboard?.nodes.map((node) => (
-          <NodeCard key={node.id} node={node} />
+          <NodeCard
+            key={node.id}
+            node={node}
+            historyRefreshKey={0}
+            historyDisabled={true}
+          />
         ))}
       </div>
 

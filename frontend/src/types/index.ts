@@ -108,6 +108,23 @@ export interface TrendPoint {
   avg_time: number;
 }
 
+export interface HealthCheckRecord {
+  node_id?: string;
+  check_time: string;
+  success: boolean;
+  response_time_ms: number;
+  error_message: string;
+  check_method: string;
+}
+
+export interface HealthHistory {
+  node_id: string;
+  from: string;
+  to: string;
+  total: number;
+  checks: HealthCheckRecord[];
+}
+
 export interface MonitorNode {
   id: string;
   name: string;
@@ -150,16 +167,28 @@ export interface CreateMonitorShareRequest {
   expire_in: ShareExpireIn;
 }
 
-export interface WSMessage {
-  type: 'node_status' | 'node_metrics';
-  payload: {
-    node_id: string;
-    node_name: string;
-    status?: string;
-    error?: string;
-    success_rate?: number;
-    avg_response_time?: number;
-    last_ping_ms?: number;
-    timestamp: string;
-  };
-}
+export type WSMessage =
+  | {
+      type: 'node_status' | 'node_metrics';
+      payload: {
+        node_id: string;
+        node_name: string;
+        status?: string;
+        error?: string;
+        success_rate?: number;
+        avg_response_time?: number;
+        last_ping_ms?: number;
+        timestamp: string;
+      };
+    }
+  | {
+      type: 'health_check';
+      payload: {
+        node_id: string;
+        check_time: string;
+        success: boolean;
+        response_time_ms: number;
+        error_message?: string;
+        check_method?: string;
+      };
+    };

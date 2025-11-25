@@ -13,6 +13,7 @@ import type {
   MonitorDashboard,
   MonitorShare,
   CreateMonitorShareRequest,
+  HealthHistory,
 } from '../types'
 
 const defaultHeaders = { 'Content-Type': 'application/json' }
@@ -169,6 +170,21 @@ async function toggleNode(id: string, disabled: boolean): Promise<void> {
 async function getMonitorDashboard(accountId?: string): Promise<MonitorDashboard> {
   const url = withAccount('/api/monitor/dashboard', accountId)
   return request<MonitorDashboard>(url)
+}
+
+async function getHealthHistory(
+  nodeId: string,
+  from?: string,
+  to?: string,
+): Promise<HealthHistory> {
+  const params = new URLSearchParams()
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
+  const qs = params.toString()
+  const url = qs
+    ? `/api/nodes/${encodeURIComponent(nodeId)}/health-history?${qs}`
+    : `/api/nodes/${encodeURIComponent(nodeId)}/health-history`
+  return request<HealthHistory>(url)
 }
 
 type CreateMonitorShareResponse = {
@@ -386,6 +402,7 @@ export default {
   activateNode,
   toggleNode,
   getMonitorDashboard,
+  getHealthHistory,
   createMonitorShare,
   getMonitorShares,
   revokeMonitorShare,

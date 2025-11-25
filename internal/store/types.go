@@ -38,6 +38,29 @@ type NodeRecord struct {
 	LastHealthCheckAt time.Time
 }
 
+// HealthCheckRecord 健康检查历史记录
+type HealthCheckRecord struct {
+	ID             int64
+	AccountID      string
+	NodeID         string
+	CheckTime      time.Time
+	Success        bool
+	ResponseTimeMs int
+	ErrorMessage   string
+	CheckMethod    string
+	CreatedAt      time.Time
+}
+
+// QueryHealthCheckParams 查询参数
+type QueryHealthCheckParams struct {
+	AccountID string
+	NodeID    string
+	From      time.Time
+	To        time.Time
+	Limit     int
+	Offset    int
+}
+
 // MetricsGranularity 描述查询或聚合的时间粒度。
 type MetricsGranularity string
 

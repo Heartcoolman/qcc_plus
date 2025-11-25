@@ -157,6 +157,26 @@ func (s *Store) ensureMonitorShareTable(ctx context.Context) error {
 	return nil
 }
 
+func (s *Store) ensureHealthHistoryTable(ctx context.Context) error {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+	stmt := `CREATE TABLE IF NOT EXISTS health_check_history (
+	  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+	  account_id VARCHAR(255) NOT NULL,
+	  node_id VARCHAR(255) NOT NULL,
+	  check_time DATETIME(3) NOT NULL,
+	  success BOOLEAN NOT NULL,
+	  response_time_ms INT,
+	  error_message TEXT,
+	  check_method VARCHAR(20) NOT NULL,
+	  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+	  INDEX idx_node_time (node_id, check_time),
+	  INDEX idx_account_node_time (account_id, node_id, check_time)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`
+	_, err := s.db.ExecContext(ctx, stmt)
+	return err
+}
+
 func (s *Store) ensureConfigTable(ctx context.Context) error {
 	hasAccount, err := s.columnExists(context.Background(), "config", "account_id")
 	if err != nil {

@@ -81,7 +81,7 @@ func (p *Server) handler() http.Handler {
 	apiMux.HandleFunc("/api/notification/subscriptions/", p.requireSession(p.handleNotificationSubscriptionByID))
 	apiMux.HandleFunc("/api/notification/event-types", p.requireSession(p.listEventTypes))
 	apiMux.HandleFunc("/api/notification/test", p.requireSession(p.testNotification))
-	apiMux.HandleFunc("/api/nodes/", p.requireSession(p.handleGetNodeMetrics))
+	apiMux.HandleFunc("/api/nodes/", p.requireSession(p.handleNodeAPIRoutes))
 	apiMux.HandleFunc("/api/accounts/", p.requireSession(p.handleGetAccountMetrics))
 	apiMux.HandleFunc("/api/metrics/aggregate", p.requireSession(p.handleAggregateMetrics))
 	apiMux.HandleFunc("/api/metrics/cleanup", p.requireSession(p.handleCleanupMetrics))
@@ -118,7 +118,7 @@ func (p *Server) handler() http.Handler {
 			return
 		}
 
-		if (strings.HasPrefix(path, "/api/nodes/") && strings.HasSuffix(path, "/metrics")) ||
+		if (strings.HasPrefix(path, "/api/nodes/") && (strings.HasSuffix(path, "/metrics") || strings.HasSuffix(path, "/health-history"))) ||
 			(strings.HasPrefix(path, "/api/accounts/") && strings.HasSuffix(path, "/metrics")) ||
 			path == "/api/metrics/aggregate" || path == "/api/metrics/cleanup" {
 			apiMux.ServeHTTP(w, r)

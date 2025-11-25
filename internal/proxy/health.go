@@ -140,6 +140,9 @@ func (p *Server) checkNodeHealth(acc *Account, id string) {
 	}
 	nodeCopy := *node
 	p.mu.RUnlock()
+	if nodeCopy.AccountID == "" && acc != nil {
+		nodeCopy.AccountID = acc.ID
+	}
 
 	// 根据健康检查方式设置超时时间
 	method := normalizeHealthCheckMethod(nodeCopy.HealthCheckMethod)
@@ -175,6 +178,8 @@ func (p *Server) checkNodeHealth(acc *Account, id string) {
 	default:
 		ok, pingErr, latency = p.healthCheckViaAPI(ctx, nodeCopy)
 	}
+	checkedAt := time.Now().UTC()
+	p.recordHealthEvent(nodeCopy.AccountID, nodeCopy.ID, method, ok, latency, pingErr, checkedAt)
 
 	var (
 		rec           store.NodeRecord
@@ -360,6 +365,51 @@ func (p *Server) healthCheckViaCLI(ctx context.Context, node Node) (bool, string
 		return false, "cli health check returned empty output", latency
 	}
 	return true, "", latency
+}
+
+func (p *Server) recordHealthEvent(accountID, nodeID, method string, success bool, latency time.Duration, errMsg string, checkTime time.Time) {
+	if p == nil {
+		return
+	}
+	if checkTime.IsZero() {
+		checkTime = time.Now().UTC()
+	}
+	if accountID == "" {
+		accountID = store.DefaultAccountID
+	}
+	respMs := int(latency.Milliseconds())
+	if respMs < 0 {
+		respMs = 0
+	}
+
+	if p.store != nil {
+		rec := store.HealthCheckRecord{
+			AccountID:      accountID,
+			NodeID:         nodeID,
+			CheckTime:      checkTime,
+			Success:        success,
+			ResponseTimeMs: respMs,
+			ErrorMessage:   errMsg,
+			CheckMethod:    method,
+		}
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			_ = p.store.InsertHealthCheck(ctx, &rec)
+		}()
+	}
+
+	if p.wsHub != nil {
+		payload := map[string]interface{}{
+			"node_id":          nodeID,
+			"check_time":       checkTime.Format(time.RFC3339Nano),
+			"success":          success,
+			"response_time_ms": respMs,
+			"error_message":    errMsg,
+			"check_method":     method,
+		}
+		p.wsHub.Broadcast(accountID, "health_check", payload)
+	}
 }
 
 type CliRunner func(ctx context.Context, image string, env map[string]string, prompt string) (string, error)

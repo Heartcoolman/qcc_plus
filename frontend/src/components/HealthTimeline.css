@@ -1,0 +1,182 @@
+.health-timeline {
+	margin-top: 10px;
+}
+
+.health-timeline__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 6px;
+}
+
+.health-timeline__title {
+	font-size: 13px;
+	color: var(--text-secondary);
+	font-weight: 600;
+}
+
+.health-timeline__actions {
+	display: flex;
+	gap: 8px;
+}
+
+.health-timeline .chip {
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	background: rgba(255, 255, 255, 0.04);
+	color: #fff;
+	border-radius: 999px;
+	padding: 4px 10px;
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.health-timeline .chip.active {
+	background: rgba(16, 185, 129, 0.16);
+	border-color: rgba(16, 185, 129, 0.45);
+	color: #a7f3d0;
+}
+
+.health-timeline__summary {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 12px;
+	color: var(--text-muted);
+	margin-bottom: 8px;
+}
+
+.health-timeline__summary .pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-weight: 600;
+	border: 1px solid transparent;
+}
+
+.health-timeline__summary .pill.ok {
+	background: rgba(16, 185, 129, 0.15);
+	color: #34d399;
+	border-color: rgba(16, 185, 129, 0.35);
+}
+
+.health-timeline__summary .pill.slow {
+	background: rgba(245, 158, 11, 0.15);
+	color: #fbbf24;
+	border-color: rgba(245, 158, 11, 0.35);
+}
+
+.health-timeline__summary .pill.fail {
+	background: rgba(239, 68, 68, 0.15);
+	color: #fca5a5;
+	border-color: rgba(239, 68, 68, 0.35);
+}
+
+.health-track {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	overflow-x: auto;
+	padding: 10px;
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	min-height: 28px;
+}
+
+.health-track.loading {
+	justify-content: center;
+}
+
+.health-track__skeleton {
+	width: 100%;
+	height: 8px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+	background-size: 200% 100%;
+	animation: shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: -120% 0;
+	}
+	100% {
+		background-position: 120% 0;
+	}
+}
+
+.health-empty {
+	color: var(--text-muted);
+	font-size: 12px;
+}
+
+.health-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 3px;
+	flex: 0 0 auto;
+	transition: transform 0.12s ease, opacity 0.12s ease;
+	cursor: pointer;
+}
+
+.health-dot:hover {
+	transform: scale(1.2);
+	opacity: 0.9;
+}
+
+.health-dot.ok {
+	background: #10b981;
+}
+
+.health-dot.slow {
+	background: #f59e0b;
+}
+
+.health-dot.fail {
+	background: #ef4444;
+}
+
+.health-error {
+	margin-top: 6px;
+	color: #fca5a5;
+	font-size: 12px;
+}
+
+.health-tooltip {
+	position: fixed;
+	z-index: 20;
+	min-width: 180px;
+	max-width: 280px;
+	background: rgba(17, 24, 39, 0.92);
+	color: #fff;
+	padding: 10px 12px;
+	border-radius: 10px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.health-tooltip__time {
+	font-weight: 700;
+	margin-bottom: 6px;
+}
+
+.health-tooltip__row {
+	color: #e5e7eb;
+}
+
+@media (max-width: 640px) {
+	.health-timeline__actions {
+		flex-wrap: wrap;
+	}
+	.health-timeline__summary {
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+}
+

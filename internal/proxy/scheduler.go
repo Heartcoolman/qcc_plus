@@ -178,6 +178,10 @@ func (m *MetricsScheduler) runCleanup() {
 	} else {
 		m.logger.Printf("[MetricsScheduler] Cleanup completed in %v", time.Since(start))
 	}
+
+	if err := m.store.CleanupHealthChecks(ctx, time.Time{}); err != nil {
+		m.logger.Printf("[MetricsScheduler] Health history cleanup failed: %v", err)
+	}
 }
 
 func (m *MetricsScheduler) nextAggregateDelay(now time.Time) time.Duration {

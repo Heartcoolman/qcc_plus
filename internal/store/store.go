@@ -37,6 +37,9 @@ func (s *Store) migrate(ctx context.Context) error {
 	if err := s.ensureNodesTable(ctx); err != nil {
 		return err
 	}
+	if err := s.ensureHealthHistoryTable(ctx); err != nil {
+		return err
+	}
 	if err := s.ensureMonitorShareTable(ctx); err != nil {
 		return err
 	}
