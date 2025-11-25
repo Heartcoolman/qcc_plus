@@ -81,6 +81,10 @@ func (p *Server) handler() http.Handler {
 	apiMux.HandleFunc("/api/notification/subscriptions/", p.requireSession(p.handleNotificationSubscriptionByID))
 	apiMux.HandleFunc("/api/notification/event-types", p.requireSession(p.listEventTypes))
 	apiMux.HandleFunc("/api/notification/test", p.requireSession(p.testNotification))
+	apiMux.HandleFunc("/api/nodes/", p.requireSession(p.handleGetNodeMetrics))
+	apiMux.HandleFunc("/api/accounts/", p.requireSession(p.handleGetAccountMetrics))
+	apiMux.HandleFunc("/api/metrics/aggregate", p.requireSession(p.handleAggregateMetrics))
+	apiMux.HandleFunc("/api/metrics/cleanup", p.requireSession(p.handleCleanupMetrics))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
@@ -101,6 +105,13 @@ func (p *Server) handler() http.Handler {
 		}
 
 		if strings.HasPrefix(path, "/api/notification/") {
+			apiMux.ServeHTTP(w, r)
+			return
+		}
+
+		if (strings.HasPrefix(path, "/api/nodes/") && strings.HasSuffix(path, "/metrics")) ||
+			(strings.HasPrefix(path, "/api/accounts/") && strings.HasSuffix(path, "/metrics")) ||
+			path == "/api/metrics/aggregate" || path == "/api/metrics/cleanup" {
 			apiMux.ServeHTTP(w, r)
 			return
 		}
@@ -169,7 +180,11 @@ func (p *Server) requireSession(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// 判断是否为 API 请求
-		isAPIRequest := strings.HasPrefix(r.URL.Path, "/admin/api/") || strings.HasPrefix(r.URL.Path, "/api/notification/")
+		isAPIRequest := strings.HasPrefix(r.URL.Path, "/admin/api/") ||
+			strings.HasPrefix(r.URL.Path, "/api/notification/") ||
+			strings.HasPrefix(r.URL.Path, "/api/nodes/") ||
+			strings.HasPrefix(r.URL.Path, "/api/accounts/") ||
+			strings.HasPrefix(r.URL.Path, "/api/metrics/")
 
 		cookie, err := r.Cookie("session_token")
 		if err != nil || cookie.Value == "" {

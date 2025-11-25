@@ -37,6 +37,9 @@ func (s *Store) migrate(ctx context.Context) error {
 	if err := s.ensureNodesTable(ctx); err != nil {
 		return err
 	}
+	if err := s.ensureMetricsTables(ctx); err != nil {
+		return err
+	}
 	if err := s.ensureConfigTable(ctx); err != nil {
 		return err
 	}

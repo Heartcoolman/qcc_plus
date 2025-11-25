@@ -170,6 +170,93 @@ func (s *Store) ensureTunnelConfigTable(ctx context.Context) error {
 	return err
 }
 
+func (s *Store) ensureMetricsTables(ctx context.Context) error {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	createRaw := `CREATE TABLE IF NOT EXISTS node_metrics_raw (
+		id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		account_id VARCHAR(64) NOT NULL,
+		node_id VARCHAR(64) NOT NULL,
+		ts DATETIME NOT NULL,
+		requests_total BIGINT DEFAULT 0,
+		requests_success BIGINT DEFAULT 0,
+		requests_failed BIGINT DEFAULT 0,
+		response_time_sum_ms BIGINT DEFAULT 0,
+		response_time_count BIGINT DEFAULT 0,
+		bytes_total BIGINT DEFAULT 0,
+		input_tokens_total BIGINT DEFAULT 0,
+		output_tokens_total BIGINT DEFAULT 0,
+		first_byte_time_sum_ms BIGINT DEFAULT 0,
+		stream_duration_sum_ms BIGINT DEFAULT 0,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		KEY idx_metrics_raw_account_node_time (account_id, node_id, ts),
+		KEY idx_metrics_raw_time (ts)
+	)`
+
+	createHourly := `CREATE TABLE IF NOT EXISTS node_metrics_hourly (
+		account_id VARCHAR(64) NOT NULL,
+		node_id VARCHAR(64) NOT NULL,
+		bucket_start DATETIME NOT NULL,
+		requests_total BIGINT DEFAULT 0,
+		requests_success BIGINT DEFAULT 0,
+		requests_failed BIGINT DEFAULT 0,
+		response_time_sum_ms BIGINT DEFAULT 0,
+		response_time_count BIGINT DEFAULT 0,
+		bytes_total BIGINT DEFAULT 0,
+		input_tokens_total BIGINT DEFAULT 0,
+		output_tokens_total BIGINT DEFAULT 0,
+		first_byte_time_sum_ms BIGINT DEFAULT 0,
+		stream_duration_sum_ms BIGINT DEFAULT 0,
+		PRIMARY KEY (account_id, node_id, bucket_start),
+		KEY idx_metrics_hour_time (bucket_start)
+	)`
+
+	createDaily := `CREATE TABLE IF NOT EXISTS node_metrics_daily (
+		account_id VARCHAR(64) NOT NULL,
+		node_id VARCHAR(64) NOT NULL,
+		bucket_start DATETIME NOT NULL,
+		requests_total BIGINT DEFAULT 0,
+		requests_success BIGINT DEFAULT 0,
+		requests_failed BIGINT DEFAULT 0,
+		response_time_sum_ms BIGINT DEFAULT 0,
+		response_time_count BIGINT DEFAULT 0,
+		bytes_total BIGINT DEFAULT 0,
+		input_tokens_total BIGINT DEFAULT 0,
+		output_tokens_total BIGINT DEFAULT 0,
+		first_byte_time_sum_ms BIGINT DEFAULT 0,
+		stream_duration_sum_ms BIGINT DEFAULT 0,
+		PRIMARY KEY (account_id, node_id, bucket_start),
+		KEY idx_metrics_day_time (bucket_start)
+	)`
+
+	createMonthly := `CREATE TABLE IF NOT EXISTS node_metrics_monthly (
+		account_id VARCHAR(64) NOT NULL,
+		node_id VARCHAR(64) NOT NULL,
+		bucket_start DATETIME NOT NULL,
+		requests_total BIGINT DEFAULT 0,
+		requests_success BIGINT DEFAULT 0,
+		requests_failed BIGINT DEFAULT 0,
+		response_time_sum_ms BIGINT DEFAULT 0,
+		response_time_count BIGINT DEFAULT 0,
+		bytes_total BIGINT DEFAULT 0,
+		input_tokens_total BIGINT DEFAULT 0,
+		output_tokens_total BIGINT DEFAULT 0,
+		first_byte_time_sum_ms BIGINT DEFAULT 0,
+		stream_duration_sum_ms BIGINT DEFAULT 0,
+		PRIMARY KEY (account_id, node_id, bucket_start),
+		KEY idx_metrics_month_time (bucket_start)
+	)`
+
+	stmts := []string{createRaw, createHourly, createDaily, createMonthly}
+	for _, stmt := range stmts {
+		if _, err := s.db.ExecContext(ctx, stmt); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *Store) recreateConfigTable() error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()

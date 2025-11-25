@@ -32,17 +32,18 @@ type Server struct {
 
 	sessionMgr *SessionManager
 
-	listenAddr  string
-	transport   http.RoundTripper
-	logger      *log.Logger
-	retries     int
-	failLimit   int
-	healthEvery time.Duration
-	healthRT    http.RoundTripper
-	cliRunner   CliRunner
-	store       *store.Store
-	adminKey    string
-	notifyMgr   *notify.Manager
+	listenAddr       string
+	transport        http.RoundTripper
+	logger           *log.Logger
+	retries          int
+	failLimit        int
+	healthEvery      time.Duration
+	healthRT         http.RoundTripper
+	cliRunner        CliRunner
+	store            *store.Store
+	adminKey         string
+	notifyMgr        *notify.Manager
+	metricsScheduler *MetricsScheduler
 
 	tunnelMgr *tunnel.Manager
 	tunnelMu  sync.Mutex
@@ -50,6 +51,13 @@ type Server struct {
 
 // Start 运行反向代理并阻塞直到关闭。
 func (p *Server) Start() error {
+	if p.metricsScheduler != nil {
+		if err := p.metricsScheduler.Start(); err != nil {
+			return err
+		}
+		defer p.metricsScheduler.Stop()
+	}
+
 	go p.healthLoop()
 	server := &http.Server{
 		Addr:         p.listenAddr,
@@ -74,6 +82,13 @@ func (p *Server) Start() error {
 	p.mu.RUnlock()
 
 	return server.ListenAndServe()
+}
+
+// Stop 用于优雅关闭后台任务。
+func (p *Server) Stop() {
+	if p.metricsScheduler != nil {
+		p.metricsScheduler.Stop()
+	}
 }
 
 // Handler 暴露 HTTP 处理器，便于测试或自定义服务器。

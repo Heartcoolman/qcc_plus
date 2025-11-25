@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"strings"
 	"time"
 
 	"qcc_plus/internal/notify"
@@ -160,6 +162,27 @@ func (b *Builder) Build() (*Server, error) {
 	if logger == nil {
 		logger = log.Default()
 	}
+
+	aggregateInterval := defaultAggregateInterval
+	if v := os.Getenv("METRICS_AGGREGATE_INTERVAL"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil && d > 0 {
+			aggregateInterval = d
+		} else {
+			logger.Printf("invalid METRICS_AGGREGATE_INTERVAL=%s, fallback to %v", v, defaultAggregateInterval)
+		}
+	}
+	cleanupInterval := defaultCleanupInterval
+	if v := os.Getenv("METRICS_CLEANUP_INTERVAL"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil && d > 0 {
+			cleanupInterval = d
+		} else {
+			logger.Printf("invalid METRICS_CLEANUP_INTERVAL=%s, fallback to %v", v, defaultCleanupInterval)
+		}
+	}
+	schedulerEnabled := true
+	if v := os.Getenv("METRICS_SCHEDULER_ENABLED"); v != "" {
+		schedulerEnabled = !(v == "0" || strings.EqualFold(v, "false") || strings.EqualFold(v, "off"))
+	}
 	healthRT := transport
 	transport = &retryTransport{base: transport, attempts: b.retries, logger: logger}
 
@@ -169,6 +192,13 @@ func (b *Builder) Build() (*Server, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	var metricsScheduler *MetricsScheduler
+	if st != nil && schedulerEnabled {
+		metricsScheduler = NewMetricsScheduler(st, logger)
+		metricsScheduler.aggregateInterval = aggregateInterval
+		metricsScheduler.cleanupInterval = cleanupInterval
 	}
 
 	adminKey := b.adminKey
@@ -189,19 +219,20 @@ func (b *Builder) Build() (*Server, error) {
 	}
 
 	srv := &Server{
-		accounts:       make(map[string]*Account),
-		accountByID:    make(map[string]*Account),
-		nodeIndex:      make(map[string]*Node),
-		nodeAccount:    make(map[string]*Account),
-		listenAddr:     b.listenAddr,
-		transport:      transport,
-		healthRT:       healthRT,
-		cliRunner:      runner,
-		logger:         logger,
-		store:          st,
-		adminKey:       adminKey,
-		defaultAccName: defaultAccountName,
-		sessionMgr:     NewSessionManager(defaultSessionTTL),
+		accounts:         make(map[string]*Account),
+		accountByID:      make(map[string]*Account),
+		nodeIndex:        make(map[string]*Node),
+		nodeAccount:      make(map[string]*Account),
+		listenAddr:       b.listenAddr,
+		transport:        transport,
+		healthRT:         healthRT,
+		cliRunner:        runner,
+		logger:           logger,
+		store:            st,
+		adminKey:         adminKey,
+		defaultAccName:   defaultAccountName,
+		sessionMgr:       NewSessionManager(defaultSessionTTL),
+		metricsScheduler: metricsScheduler,
 	}
 
 	if st != nil {

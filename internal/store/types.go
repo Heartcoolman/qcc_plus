@@ -38,6 +38,98 @@ type NodeRecord struct {
 	LastHealthCheckAt time.Time
 }
 
+// MetricsGranularity 描述查询或聚合的时间粒度。
+type MetricsGranularity string
+
+const (
+	MetricsGranularityRaw     MetricsGranularity = "raw"
+	MetricsGranularityHourly  MetricsGranularity = "hour"
+	MetricsGranularityDaily   MetricsGranularity = "day"
+	MetricsGranularityMonthly MetricsGranularity = "month"
+)
+
+// MetricsRecord 表示单次请求或采样点的原始监控数据。
+// 所有时间相关字段均使用 UTC 存储，便于跨地域查询。
+type MetricsRecord struct {
+	ID                  int64
+	AccountID           string
+	NodeID              string
+	Timestamp           time.Time
+	RequestsTotal       int64
+	RequestsSuccess     int64
+	RequestsFailed      int64
+	ResponseTimeSumMs   int64 // 总响应耗时（毫秒），配合 ResponseTimeCount 计算平均值
+	ResponseTimeCount   int64
+	BytesTotal          int64
+	InputTokensTotal    int64
+	OutputTokensTotal   int64
+	FirstByteTimeSumMs  int64 // 首字节时间总和（毫秒）
+	StreamDurationSumMs int64 // 流式持续时间总和（毫秒）
+	CreatedAt           time.Time
+}
+
+// MetricsHourly 表示小时级聚合数据（半开区间 [BucketStart, BucketStart+1h)）。
+type MetricsHourly struct {
+	AccountID           string
+	NodeID              string
+	BucketStart         time.Time
+	RequestsTotal       int64
+	RequestsSuccess     int64
+	RequestsFailed      int64
+	ResponseTimeSumMs   int64
+	ResponseTimeCount   int64
+	BytesTotal          int64
+	InputTokensTotal    int64
+	OutputTokensTotal   int64
+	FirstByteTimeSumMs  int64
+	StreamDurationSumMs int64
+}
+
+// MetricsDaily 表示天级聚合数据（UTC 零点对齐）。
+type MetricsDaily struct {
+	AccountID           string
+	NodeID              string
+	BucketStart         time.Time
+	RequestsTotal       int64
+	RequestsSuccess     int64
+	RequestsFailed      int64
+	ResponseTimeSumMs   int64
+	ResponseTimeCount   int64
+	BytesTotal          int64
+	InputTokensTotal    int64
+	OutputTokensTotal   int64
+	FirstByteTimeSumMs  int64
+	StreamDurationSumMs int64
+}
+
+// MetricsMonthly 表示月级聚合数据（UTC 月初对齐）。
+type MetricsMonthly struct {
+	AccountID           string
+	NodeID              string
+	BucketStart         time.Time
+	RequestsTotal       int64
+	RequestsSuccess     int64
+	RequestsFailed      int64
+	ResponseTimeSumMs   int64
+	ResponseTimeCount   int64
+	BytesTotal          int64
+	InputTokensTotal    int64
+	OutputTokensTotal   int64
+	FirstByteTimeSumMs  int64
+	StreamDurationSumMs int64
+}
+
+// MetricsQuery 描述监控数据查询参数。
+type MetricsQuery struct {
+	AccountID   string
+	NodeID      string
+	From        time.Time
+	To          time.Time
+	Granularity MetricsGranularity
+	Limit       int
+	Offset      int
+}
+
 // AccountRecord 账号记录。
 type AccountRecord struct {
 	ID          string
