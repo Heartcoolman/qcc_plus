@@ -46,6 +46,10 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     }
     throw new Error(message || 'request failed')
   }
+  // 204 No Content 不需要解析响应体
+  if (res.status === 204) {
+    return undefined as T
+  }
   return parseJSON<T>(res)
 }
 
