@@ -89,6 +89,10 @@ func (p *Server) handler() http.Handler {
 	apiMux.HandleFunc("/api/monitor/shares", p.requireSession(p.handleMonitorShares))
 	apiMux.HandleFunc("/api/monitor/shares/", p.requireSession(p.handleRevokeMonitorShare))
 	apiMux.HandleFunc("/api/monitor/share/", p.handleAccessMonitorShare)
+	settingsHandler := &SettingsHandler{store: p.store}
+	apiMux.HandleFunc("/api/settings", p.requireSession(settingsHandler.ListSettings))
+	apiMux.HandleFunc("/api/settings/batch", p.requireSession(settingsHandler.BatchUpdate))
+	apiMux.HandleFunc("/api/settings/", p.requireSession(settingsHandler.HandleSetting))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
@@ -118,7 +122,6 @@ func (p *Server) handler() http.Handler {
 			return
 		}
 
-
 		// Allow shared health history access without session when share_token is present.
 		if strings.HasPrefix(path, "/api/nodes/") && strings.HasSuffix(path, "/health-history") {
 			if r.URL.Query().Get("share_token") != "" {
@@ -137,6 +140,11 @@ func (p *Server) handler() http.Handler {
 		}
 
 		if strings.HasPrefix(path, "/api/monitor/") {
+			apiMux.ServeHTTP(w, r)
+			return
+		}
+
+		if strings.HasPrefix(path, "/api/settings") {
 			apiMux.ServeHTTP(w, r)
 			return
 		}
@@ -211,7 +219,8 @@ func (p *Server) requireSession(next http.HandlerFunc) http.HandlerFunc {
 			strings.HasPrefix(r.URL.Path, "/api/nodes/") ||
 			strings.HasPrefix(r.URL.Path, "/api/accounts/") ||
 			strings.HasPrefix(r.URL.Path, "/api/metrics/") ||
-			strings.HasPrefix(r.URL.Path, "/api/monitor/")
+			strings.HasPrefix(r.URL.Path, "/api/monitor/") ||
+			strings.HasPrefix(r.URL.Path, "/api/settings")
 
 		cookie, err := r.Cookie("session_token")
 		if err != nil || cookie.Value == "" {

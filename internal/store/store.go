@@ -55,6 +55,12 @@ func (s *Store) migrate(ctx context.Context) error {
 	if err := s.ensureNotificationTables(ctx); err != nil {
 		return err
 	}
+	if err := s.ensureSettingsTable(ctx); err != nil {
+		return err
+	}
+	if err := s.SeedDefaultSettings(); err != nil {
+		return err
+	}
 	return s.ensureMonitorSharesTable(ctx)
 }
 

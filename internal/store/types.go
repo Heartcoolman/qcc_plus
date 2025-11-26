@@ -171,7 +171,10 @@ type Config struct {
 	HealthEvery time.Duration
 }
 
-var ErrNotFound = errors.New("not found")
+var (
+	ErrNotFound        = errors.New("not found")
+	ErrVersionConflict = errors.New("version conflict")
+)
 
 // NotificationChannelRecord 描述通知渠道的持久化结构。
 type NotificationChannelRecord struct {
