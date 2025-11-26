@@ -118,7 +118,7 @@ const versionTitle = version
 ### /version 接口返回
 ```json
 {
-  "version": "v1.0.0",
+  "version": "v1.5.0",
   "git_commit": "abc123",
   "build_date": "2025-11-25T10:30:00Z",
   "build_date_beijing": "2025年11月25日 18时30分00秒",
@@ -136,7 +136,7 @@ const versionTitle = version
 
 ### 后端日志
 ```
-qcc_plus version: v1.0.0 (commit=abc123, build_utc=2025-11-25T10:30:00Z, build_bj=2025年11月25日 18时30分00秒, go=go1.21.0)
+qcc_plus version: v1.5.0 (commit=abc123, build_utc=2025-11-25T10:30:00Z, build_bj=2025年11月25日 18时30分00秒, go=go1.21.0)
 ```
 
 ## 技术细节

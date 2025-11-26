@@ -6,6 +6,27 @@
 
 ## [Unreleased]
 
+## [1.5.0] - 2025-11-26
+
+### 改进
+- 简化节点状态显示为在线/离线两态，移除卡片顶部状态徽章，信息展示更聚焦（6c95008, 72f7531）
+- 优化节点管理列表展示，提升密度与可读性（a237282）
+
+### 文档
+- 补充分支开发规范到记忆文件（d1ea930）
+
+## [1.4.0] - 2025-11-26
+
+### 新增
+- 前端主题系统与侧边栏布局重构，支持多主题色并统一配色方案（aa7e33f, 5542e25）
+- 图表颜色映射到主题系统，保持可视化一致性（202942b）
+
+### 改进
+- 全局间距与排版基线紧凑化，页面逐一优化为更高信息密度（61580b0, b895f16）
+
+### 修复
+- 移除 body/root 级别的居中和间距限制，避免布局被强制居中（1e335b3）
+
 ## [1.3.0] - 2025-11-26
 
 ### 新增
@@ -178,7 +199,9 @@
 - 前端：React 18, TypeScript, Vite, Chart.js
 - 部署：Docker Compose, Cloudflare Tunnel
 
-[unreleased]: https://github.com/yxhpy/qcc_plus/compare/v1.3.0...HEAD
+[unreleased]: https://github.com/yxhpy/qcc_plus/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/yxhpy/qcc_plus/compare/v1.4.0...v1.5.0
+[1.4.0]: https://github.com/yxhpy/qcc_plus/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/yxhpy/qcc_plus/releases/tag/v1.3.0
 [1.2.0]: https://github.com/yxhpy/qcc_plus/releases/tag/v1.2.0
 [1.1.0]: https://github.com/yxhpy/qcc_plus/releases/tag/v1.1.0

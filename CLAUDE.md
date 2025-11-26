@@ -4,9 +4,9 @@
 ## 最后更新
 - **更新日期**: 2025-11-26
 - **更新人**: Claude Code
-- **当前版本**: v1.3.0
-- **最新功能**: 监控大屏和分享功能
-- **最新更新**: 实时监控大屏、健康检查历史时间线、共享监控页面、分离代理流量和健康检查指标
+- **当前版本**: v1.5.0
+- **最新功能**: 健康检查状态两态化、节点列表展示优化
+- **最新更新**: 在线/离线两态显示，移除卡片状态徽章，节点列表信息更紧凑；前端主题与布局紧凑化延续
 - **GitHub**: https://github.com/yxhpy/qcc_plus
 - **Docker Hub**: https://hub.docker.com/r/yxhpy520/qcc_plus
 
@@ -526,6 +526,26 @@ docker compose up -d
     </important_notes>
 
     <version_history description="版本发布历史">
+        <release version="v1.5.0" date="2025-11-26">
+            <description>健康检查两态化与列表体验优化</description>
+            <highlights>
+                - 健康检查状态简化为在线/离线两态
+                - 移除节点卡片顶部状态徽章
+                - 节点管理列表展示与密度优化
+            </highlights>
+            <github>https://github.com/yxhpy/qcc_plus/releases/tag/v1.5.0</github>
+            <docker>yxhpy520/qcc_plus:v1.5.0</docker>
+        </release>
+        <release version="v1.4.0" date="2025-11-26">
+            <description>主题系统与紧凑布局</description>
+            <highlights>
+                - 前端主题系统与侧边栏布局重构
+                - 图表颜色映射到主题系统
+                - 全局间距/排版紧凑化
+            </highlights>
+            <github>https://github.com/yxhpy/qcc_plus/releases/tag/v1.4.0</github>
+            <docker>yxhpy520/qcc_plus:v1.4.0</docker>
+        </release>
         <release version="v1.3.0" date="2025-11-26">
             <description>监控大屏和分享功能</description>
             <highlights>

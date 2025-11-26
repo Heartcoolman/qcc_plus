@@ -1,6 +1,6 @@
 # qcc_plus - Claude Code CLI 多租户代理服务器
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/yxhpy/qcc_plus/releases/tag/v1.1.0)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/yxhpy/qcc_plus/releases/tag/v1.5.0)
 [![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![Docker](https://img.shields.io/badge/docker-yxhpy520%2Fqcc__plus-blue?logo=docker)](https://hub.docker.com/r/yxhpy520/qcc_plus)
 
@@ -17,6 +17,9 @@ qcc_plus 是一个功能完整的 Claude Code CLI 代理服务器，支持多租
 - **自动探活恢复**：失败节点定期探活，自动恢复可用节点
 - **React Web 管理界面**：现代化 SPA 界面，可视化管理账号和节点
 - **MySQL 持久化**：配置和统计数据持久化存储
+- **实时监控大屏**：实时展示节点状态、流量指标，并提供健康检查历史时间线
+- **监控数据持久化**：多维度监控数据持久化，分离代理流量与健康检查指标
+- **分享监控页面**：一键生成分享链接，分享页通过 WebSocket 实时推送完整指标
 - **Docker 部署**：一键部署，支持 Docker Compose
 - **Cloudflare Tunnel 集成**：内置隧道支持，无需公网 IP
 
@@ -221,6 +224,7 @@ pnpm dev
 - [Cloudflare Tunnel 集成](docs/cloudflare-tunnel.md) - 内网穿透和隧道配置
 - [前端技术栈](docs/frontend-tech-stack.md) - React Web 界面开发文档
 - [健康检查机制](docs/health_check_mechanism.md) - 节点故障检测与恢复
+- [监控数据持久化](docs/monitoring-data-persistence.md) - 多维度监控数据聚合与持久化
 - [GoReleaser 自动化发布](docs/goreleaser-guide.md) - 一键发布流程（开发者必读）⭐
 - [Docker Hub 发布](docs/docker-hub-publish.md) - 镜像发布流程（手动模式，已弃用）
 - [文档索引](docs/README.md) - 所有文档导航
