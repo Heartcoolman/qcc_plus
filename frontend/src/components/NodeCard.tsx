@@ -25,7 +25,12 @@ export default function NodeCard({ node, historyRefreshKey, healthEvent, shareTo
     : '--'
 
   return (
-    <div className="node-card">
+    <div className={`node-card ${node.is_active ? 'node-card--active' : ''}`}>
+      {lastError && (
+        <div className="node-card__error-badge" title={lastError}>
+          错误: {lastError}
+        </div>
+      )}
       {/* Header: 节点名 + 双状态徽章 */}
       <div className="node-card__header">
         <div className="node-card__title-wrap">
@@ -69,10 +74,8 @@ export default function NodeCard({ node, historyRefreshKey, healthEvent, shareTo
       {/* Footer - 单行 */}
       <div className="node-card__footer">
         <div className="node-card__badges">
-          {node.is_active && <span className="badge badge-primary">当前主用</span>}
           {node.disabled && <span className="badge badge-muted">已停用</span>}
         </div>
-        {lastError && <div className="node-card__error-inline">错误: {lastError}</div>}
       </div>
     </div>
   )
