@@ -276,6 +276,10 @@ func (b *Builder) Build() (*Server, error) {
 		wsHub:            hub,
 	}
 
+	if st != nil {
+		srv.settingsCache = NewSettingsCache(st)
+	}
+
 	if healthAllInterval > 0 {
 		srv.healthScheduler = NewHealthScheduler(srv, healthAllInterval, logger)
 	}
@@ -292,6 +296,31 @@ func (b *Builder) Build() (*Server, error) {
 	srv.retries = defaultCfg.Retries
 	srv.failLimit = defaultCfg.FailLimit
 	srv.healthEvery = defaultCfg.HealthEvery
+
+	if srv.settingsCache != nil {
+		srv.settingsCache.OnChange(func(key string, value any) {
+			switch key {
+			case "health.check_interval_sec":
+				switch n := value.(type) {
+				case float64:
+					srv.updateHealthInterval(time.Duration(n) * time.Second)
+				case int:
+					srv.updateHealthInterval(time.Duration(n) * time.Second)
+				case int64:
+					srv.updateHealthInterval(time.Duration(n) * time.Second)
+				}
+			case "proxy.retry_max":
+				switch n := value.(type) {
+				case float64:
+					srv.updateRetryMax(int(n))
+				case int:
+					srv.updateRetryMax(n)
+				case int64:
+					srv.updateRetryMax(int(n))
+				}
+			}
+		})
+	}
 
 	if st != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -406,6 +435,11 @@ func (b *Builder) Build() (*Server, error) {
 			srv.activeID = id
 			break
 		}
+	}
+
+	if srv.settingsCache != nil {
+		srv.applySettingsFromCache()
+		srv.startSettingsWatcher(30 * time.Second)
 	}
 
 	if srv.store != nil {

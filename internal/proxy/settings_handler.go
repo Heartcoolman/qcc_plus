@@ -11,6 +11,7 @@ import (
 // SettingsHandler 配置管理 API
 type SettingsHandler struct {
 	store store.SettingsStore
+	cache *SettingsCache
 }
 
 // ListSettings GET /api/settings?scope=system&category=monitor&account_id=xxx
@@ -64,6 +65,21 @@ func (h *SettingsHandler) HandleSetting(w http.ResponseWriter, r *http.Request) 
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
+}
+
+// GetVersion GET /api/settings/version
+// 返回当前全局版本号，前端轮询比较
+func (h *SettingsHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
+	if !isAdmin(r.Context()) {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "forbidden"})
+		return
+	}
+	if h.store == nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "settings store not enabled"})
+		return
+	}
+	version, _ := h.store.GetGlobalVersion()
+	writeJSON(w, http.StatusOK, map[string]any{"version": version})
 }
 
 // GetSetting GET /api/settings/:key
@@ -160,6 +176,9 @@ func (h *SettingsHandler) UpdateSetting(w http.ResponseWriter, r *http.Request, 
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
 		}
+		if h.cache != nil {
+			h.cache.UpdateLocal(key, req.Value, int64(setting.Version))
+		}
 		writeJSON(w, http.StatusOK, map[string]any{"success": true, "new_version": setting.Version})
 		return
 	}
@@ -211,6 +230,9 @@ func (h *SettingsHandler) UpdateSetting(w http.ResponseWriter, r *http.Request, 
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
+	if h.cache != nil {
+		h.cache.UpdateLocal(key, req.Value, int64(setting.Version))
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "new_version": setting.Version})
 }
 
@@ -255,6 +277,9 @@ func (h *SettingsHandler) BatchUpdate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
+	if h.cache != nil {
+		h.cache.Refresh()
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "version": h.getGlobalVersion()})
 }
 
@@ -278,6 +303,9 @@ func (h *SettingsHandler) DeleteSetting(w http.ResponseWriter, r *http.Request, 
 		}
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
+	}
+	if h.cache != nil {
+		h.cache.Refresh()
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"deleted": key})
 }

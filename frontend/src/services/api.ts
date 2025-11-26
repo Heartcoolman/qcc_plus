@@ -35,8 +35,8 @@ async function parseJSON<T>(res: Response): Promise<T> {
 }
 
 async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(url, { credentials: 'include', ...options })
-  if (!res.ok) {
+	const res = await fetch(url, { credentials: 'include', ...options })
+	if (!res.ok) {
     let message = res.statusText
     try {
       const data = await res.json()
@@ -50,8 +50,10 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   if (res.status === 204) {
     return undefined as T
   }
-  return parseJSON<T>(res)
+	return parseJSON<T>(res)
 }
+
+export { request }
 
 async function login(username: string, password: string): Promise<void> {
   const body = new URLSearchParams({ username, password })

@@ -89,7 +89,8 @@ func (p *Server) handler() http.Handler {
 	apiMux.HandleFunc("/api/monitor/shares", p.requireSession(p.handleMonitorShares))
 	apiMux.HandleFunc("/api/monitor/shares/", p.requireSession(p.handleRevokeMonitorShare))
 	apiMux.HandleFunc("/api/monitor/share/", p.handleAccessMonitorShare)
-	settingsHandler := &SettingsHandler{store: p.store}
+	settingsHandler := &SettingsHandler{store: p.store, cache: p.settingsCache}
+	apiMux.HandleFunc("/api/settings/version", p.requireSession(settingsHandler.GetVersion))
 	apiMux.HandleFunc("/api/settings", p.requireSession(settingsHandler.ListSettings))
 	apiMux.HandleFunc("/api/settings/batch", p.requireSession(settingsHandler.BatchUpdate))
 	apiMux.HandleFunc("/api/settings/", p.requireSession(settingsHandler.HandleSetting))
@@ -160,7 +161,7 @@ func (p *Server) handler() http.Handler {
 		// SPA routes (admin UI and assets)
 		if path == "/" || path == "/login" || path == "/admin" || path == "/index.html" ||
 			strings.HasPrefix(path, "/admin/") || strings.HasPrefix(path, "/assets/") ||
-			strings.HasPrefix(path, "/monitor/") ||
+			strings.HasPrefix(path, "/monitor/") || strings.HasPrefix(path, "/settings") ||
 			path == "/vite.svg" || path == "/favicon.ico" ||
 			strings.HasPrefix(path, "/qcc-icon-") {
 			spa(w, r)

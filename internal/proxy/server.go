@@ -45,6 +45,9 @@ type Server struct {
 	notifyMgr        *notify.Manager
 	metricsScheduler *MetricsScheduler
 	healthScheduler  *HealthScheduler
+	settingsCache    *SettingsCache
+	settingsStopCh   chan struct{}
+	settingsWg       sync.WaitGroup
 
 	tunnelMgr *tunnel.Manager
 	tunnelMu  sync.Mutex
@@ -101,11 +104,67 @@ func (p *Server) Stop() {
 	if p.metricsScheduler != nil {
 		p.metricsScheduler.Stop()
 	}
+	if p.settingsStopCh != nil {
+		close(p.settingsStopCh)
+		p.settingsWg.Wait()
+	}
 }
 
 // Handler 暴露 HTTP 处理器，便于测试或自定义服务器。
 func (p *Server) Handler() http.Handler {
 	return p.handler()
+}
+
+// startSettingsWatcher 周期刷新设置缓存，用于跨实例热更新。
+func (p *Server) startSettingsWatcher(interval time.Duration) {
+	if p == nil || p.settingsCache == nil || interval <= 0 {
+		return
+	}
+	if p.settingsStopCh != nil {
+		return
+	}
+	p.settingsStopCh = make(chan struct{})
+	p.settingsWg.Add(1)
+	go func() {
+		defer p.settingsWg.Done()
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				p.settingsCache.Refresh()
+			case <-p.settingsStopCh:
+				return
+			}
+		}
+	}()
+}
+
+// applySettingsFromCache 将缓存中的关键配置应用到运行时。
+func (p *Server) applySettingsFromCache() {
+	if p == nil || p.settingsCache == nil {
+		return
+	}
+	if v, ok := p.settingsCache.Get("health.check_interval_sec"); ok {
+		switch n := v.(type) {
+		case float64:
+			p.updateHealthInterval(time.Duration(n) * time.Second)
+		case int:
+			p.updateHealthInterval(time.Duration(n) * time.Second)
+		case int64:
+			p.updateHealthInterval(time.Duration(n) * time.Second)
+		}
+	}
+	if v, ok := p.settingsCache.Get("proxy.retry_max"); ok {
+		switch n := v.(type) {
+		case float64:
+			p.updateRetryMax(int(n))
+		case int:
+			p.updateRetryMax(n)
+		case int64:
+			p.updateRetryMax(int(n))
+		}
+	}
 }
 
 // 创建默认账号及默认节点（如必要）。
@@ -506,6 +565,40 @@ func (p *Server) updateTunnelStatus(ctx context.Context, cfg *store.TunnelConfig
 	cfg.PublicURL = publicURL
 	cfg.Enabled = enabled
 	return p.store.SaveTunnelConfig(ctx, *cfg)
+}
+
+// updateHealthInterval 在运行时调整健康检查间隔（秒级）。
+func (p *Server) updateHealthInterval(interval time.Duration) {
+	if interval <= 0 {
+		return
+	}
+	p.mu.Lock()
+	for _, acc := range p.accountByID {
+		if acc != nil {
+			acc.Config.HealthEvery = interval
+		}
+	}
+	p.healthEvery = interval
+	p.mu.Unlock()
+}
+
+// updateRetryMax 在运行时调整重试次数。
+func (p *Server) updateRetryMax(max int) {
+	if max <= 0 {
+		return
+	}
+	p.mu.Lock()
+	for _, acc := range p.accountByID {
+		if acc != nil {
+			acc.Config.Retries = max
+		}
+	}
+	p.retries = max
+	p.mu.Unlock()
+
+	if rt, ok := p.transport.(*retryTransport); ok {
+		rt.attempts = max
+	}
 }
 
 func buildLocalURL(listenAddr string) string {

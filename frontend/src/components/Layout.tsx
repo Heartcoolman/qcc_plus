@@ -129,14 +129,14 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { path: '/admin/dashboard', label: '仪表盘', icon: 'dashboard', group: 'core' },
-  { path: '/admin/monitor', label: '监控大屏', icon: 'monitor', group: 'core' },
-  { path: '/admin/nodes', label: '节点管理', icon: 'nodes', group: 'core' },
-  { path: '/admin/accounts', label: '账号管理', icon: 'accounts', adminOnly: true, group: 'system' },
-  { path: '/admin/monitor-shares', label: '分享链接', icon: 'share', group: 'system' },
-  { path: '/admin/notifications', label: '通知管理', icon: 'notifications', group: 'system' },
-  { path: '/admin/settings', label: '系统配置', icon: 'settings', group: 'system' },
-  { path: '/admin/tunnel', label: '隧道设置', icon: 'tunnel', adminOnly: true, group: 'system' },
+	{ path: '/admin/dashboard', label: '仪表盘', icon: 'dashboard', group: 'core' },
+	{ path: '/admin/monitor', label: '监控大屏', icon: 'monitor', group: 'core' },
+	{ path: '/admin/nodes', label: '节点管理', icon: 'nodes', group: 'core' },
+	{ path: '/admin/accounts', label: '账号管理', icon: 'accounts', adminOnly: true, group: 'system' },
+	{ path: '/admin/monitor-shares', label: '分享链接', icon: 'share', group: 'system' },
+	{ path: '/admin/notifications', label: '通知管理', icon: 'notifications', group: 'system' },
+	{ path: '/settings', label: '系统设置', icon: 'settings', adminOnly: true, group: 'system' },
+	{ path: '/admin/tunnel', label: '隧道设置', icon: 'tunnel', adminOnly: true, group: 'system' },
 ]
 
 const SIDEBAR_STORAGE_KEY = 'qcc-sidebar-collapsed'
