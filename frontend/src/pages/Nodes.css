@@ -16,20 +16,20 @@
 }
 
 .nodes-header {
-  margin-bottom: 32px;
+  margin-bottom: var(--spacing-6);
   animation: fadeIn 0.6s ease-out;
 }
 
 .nodes-header h1 {
-  font-size: 32px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
+  font-size: var(--font-size-page-title);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 var(--spacing-3) 0;
   color: var(--color-text-primary);
 }
 
 .nodes-header .sub {
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-subtitle);
   margin: 0;
   font-weight: 300;
 }
@@ -38,17 +38,17 @@
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-3);
   flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-4);
 }
 
 .toolbar label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-2);
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 500;
 }
 
@@ -57,10 +57,11 @@
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-default);
   color: var(--color-text-primary);
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: var(--input-padding-y) var(--input-padding-x);
+  height: var(--input-height);
+  border-radius: var(--radius-xl);
   outline: none;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -86,28 +87,28 @@
 }
 
 .toolbar .btn {
-  padding: 10px 20px;
+  padding: var(--button-padding-y) var(--button-padding-x);
 }
 
 /* Table */
 .table-wrapper {
   overflow-x: auto;
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   animation: fadeIn 0.8s ease-out 0.2s both;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 th {
   text-align: left;
-  padding: 16px;
+  padding: var(--table-padding);
   color: var(--color-text-muted);
   font-weight: 600;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   border-bottom: 1px solid var(--color-divider);
@@ -116,7 +117,7 @@ th {
 }
 
 td {
-  padding: 16px;
+  padding: var(--table-padding);
   color: var(--color-text-primary);
   border-bottom: 1px solid var(--color-divider);
   transition: background 0.2s ease;
@@ -257,12 +258,12 @@ tbody tr.dragging td {
 .table-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
 .table-actions>div {
   display: flex;
-  gap: 6px;
+  gap: var(--spacing-2);
   flex-wrap: wrap;
 }
 
@@ -273,9 +274,10 @@ tbody tr.dragging td {
 
 /* Buttons */
 .btn {
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 14px;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  height: var(--button-height);
+  border-radius: var(--button-radius);
+  font-size: var(--button-typography-size);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
@@ -342,21 +344,21 @@ tbody tr.dragging td {
 .prompt-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--spacing-3);
   animation: fadeIn 0.4s ease-out;
 }
 
 .prompt-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: var(--spacing-3);
 }
 
 .prompt-grid label {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-small);
   color: var(--color-text-secondary);
   font-weight: 500;
 }
@@ -365,10 +367,11 @@ tbody tr.dragging td {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-default);
   color: var(--color-text-primary);
-  padding: 12px 16px;
-  border-radius: 10px;
+  padding: var(--input-padding-y) var(--input-padding-x);
+  height: var(--input-height);
+  border-radius: var(--radius-xl);
   outline: none;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   width: 100%;
   box-sizing: border-box;
   transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
@@ -395,11 +398,11 @@ tbody tr.dragging td {
 .node-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
+  gap: var(--spacing-3);
   background: var(--color-bg-card);
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 16px;
+  padding: var(--card-padding);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--spacing-4);
   border: 1px solid var(--color-border-default);
 }
 
@@ -430,14 +433,14 @@ tbody tr.dragging td {
   border: 1px solid var(--color-danger-border);
   border-left: 3px solid var(--color-danger-500);
   color: var(--color-danger-text);
-  padding: 16px;
-  border-radius: 8px;
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
   font-family: 'JetBrains Mono', 'Consolas', monospace;
   font-size: 13px;
   white-space: pre-wrap;
   word-break: break-all;
   line-height: 1.6;
-  margin-top: 16px;
+  margin-top: var(--spacing-4);
 }
 
 .error-detail div:first-child {
@@ -459,7 +462,7 @@ tbody tr.dragging td {
 
 @media (max-width: 768px) {
   .nodes-header h1 {
-    font-size: 24px;
+    font-size: var(--font-size-page-title);
   }
 
   th,
