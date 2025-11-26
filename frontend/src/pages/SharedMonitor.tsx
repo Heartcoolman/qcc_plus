@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import NodeCard from '../components/NodeCard'
 import type { HealthCheckRecord, MonitorDashboard } from '../types'
@@ -41,6 +41,14 @@ export default function SharedMonitor() {
   useEffect(() => {
     setHealthEvents({})
   }, [token])
+
+  const aggregated = useMemo(() => {
+    const list = dashboard?.nodes || []
+    const online = list.filter((n) => n.status === 'online').length
+    const offline = list.filter((n) => n.status === 'offline' || n.status === 'degraded').length
+    const disabled = list.filter((n) => n.status === 'disabled').length
+    return { online, offline, disabled }
+  }, [dashboard])
 
   // 处理 WebSocket 实时更新
   useEffect(() => {
@@ -149,6 +157,9 @@ export default function SharedMonitor() {
           </span>
           <p className="readonly-notice">
             只读模式 · 最近更新：{formatBeijingTime(dashboard?.updated_at)}
+          </p>
+          <p className="readonly-notice">
+            状态分布：🟢 {aggregated.online} / 🔴 {aggregated.offline} / ⏸ {aggregated.disabled}
           </p>
         </div>
       </header>

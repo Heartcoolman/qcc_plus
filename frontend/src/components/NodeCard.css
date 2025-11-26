@@ -66,17 +66,11 @@
 }
 
 .status-badge.traffic.offline,
+.status-badge.traffic.degraded,
 .status-badge.health.down {
   background: var(--color-danger-bg);
   border-color: var(--color-danger-border);
   color: var(--color-danger-text);
-}
-
-.status-badge.traffic.degraded,
-.status-badge.health.stale {
-  background: var(--color-warning-bg);
-  border-color: var(--color-warning-border);
-  color: var(--color-warning-text);
 }
 
 .status-badge.traffic.disabled {
@@ -86,9 +80,9 @@
 }
 
 .status-badge.health.up {
-  background: var(--color-info-bg);
-  border-color: var(--color-info-border);
-  color: var(--color-info-text);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success-text);
 }
 
 /* 紧凑指标区 */
@@ -155,7 +149,6 @@
 
 .metrics-row .health-up strong { color: var(--color-success-text); }
 .metrics-row .health-down strong { color: var(--color-danger-text); }
-.metrics-row .health-stale strong { color: var(--color-warning-text); }
 
 .node-card__footer {
   display: flex;

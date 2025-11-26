@@ -217,10 +217,9 @@ export default function Monitor({ shared = false }: MonitorProps) {
         ? list.reduce((acc, n) => acc + Number(n.traffic?.avg_response_time || 0), 0) / list.length
         : 0
     const online = list.filter((n) => n.status === 'online').length
-    const degraded = list.filter((n) => n.status === 'degraded').length
-    const offline = list.filter((n) => n.status === 'offline').length
+    const offline = list.filter((n) => n.status === 'offline' || n.status === 'degraded').length
     const disabled = list.filter((n) => n.status === 'disabled').length
-    return { totalRequests, failedRequests, successRate, avgResponse, online, degraded, offline, disabled }
+    return { totalRequests, failedRequests, successRate, avgResponse, online, offline, disabled }
   }, [dashboard])
 
   const handleCreateShare = async () => {
@@ -321,7 +320,7 @@ export default function Monitor({ shared = false }: MonitorProps) {
         title="全局指标"
         extra={
           <div className="badge gray">
-            总节点 {dashboard?.nodes.length ?? 0} · 在线 {aggregated.online} · 降级 {aggregated.degraded} · 离线 {aggregated.offline}
+            总节点 {dashboard?.nodes.length ?? 0} · 在线 {aggregated.online} · 离线 {aggregated.offline}
           </div>
         }
       >
@@ -346,9 +345,9 @@ export default function Monitor({ shared = false }: MonitorProps) {
           <div className="stat-card glass">
             <span className="muted-title">状态分布</span>
             <div className="kpi-main">
-              🟢 {aggregated.online} / ⚠️ {aggregated.degraded} / 🔴 {aggregated.offline} / ⏸ {aggregated.disabled}
+              🟢 {aggregated.online} / 🔴 {aggregated.offline} / ⏸ {aggregated.disabled}
             </div>
-            <div className="badge gray">在线 / 降级 / 离线 / 停用</div>
+            <div className="badge gray">在线 / 离线 / 停用</div>
           </div>
         </div>
       </Card>
