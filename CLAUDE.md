@@ -5,8 +5,8 @@
 - **更新日期**: 2025-11-26
 - **更新人**: Claude Code
 - **当前版本**: v1.2.0
-- **最新功能**: 分享大屏优化和时间格式统一
-- **最新更新**: 优化分享大屏布局提升信息密度，后端统一使用 `timeutil.FormatBeijingTime` 输出北京时间
+- **最新功能**: 监控大屏分离指标和紧凑布局
+- **最新更新**: 分离代理流量/健康检查指标，优化布局提升信息密度约35%
 - **GitHub**: https://github.com/yxhpy/qcc_plus
 - **Docker Hub**: https://hub.docker.com/r/yxhpy520/qcc_plus
 
@@ -258,6 +258,7 @@ docker compose up -d
         <project_rules_item title="请求指纹复刻">保持与官方 CLI 一致的请求头和参数</project_rules_item>
         <project_rules_item title="节点权重与切换">权重值越小优先级越高（1 > 2 > 3）；使用事件驱动切换，仅在节点状态变化时触发重选，避免请求路径扫描</project_rules_item>
         <project_rules_item title="时间格式统一">后端所有返回给前端显示的时间必须使用 `timeutil.FormatBeijingTime()`，输出格式为 `2006年01月02日 15时04分05秒`（北京时间 UTC+8）</project_rules_item>
+        <project_rules_item title="UI高信息密度">所有页面必须保持高信息密度：单行紧凑显示优于网格布局；字体 12-14px；padding/gap 6-10px；避免滚动条；主要信息突出、次要信息用小字/括号弱化</project_rules_item>
     </project_rules>
 
     <error_handling>
